@@ -67,8 +67,13 @@ function getBootstrap() {
     bootstrapPromise = (async () => {
       const { rdapBootstrap } = await chrome.storage.local.get('rdapBootstrap');
       if (rdapBootstrap && rdapBootstrap.expires > Date.now()) return rdapBootstrap.map;
+      const generation = rdapGeneration;
       const map = await SiteRiskRdap.fetchBootstrap();
-      await chrome.storage.local.set({ rdapBootstrap: { map, expires: Date.now() + 86400000 } });
+      // 取得中に RDAP が無効化された場合は保存しない（世代の変化と、保存直前の設定の両方を確認）
+      if (generation === rdapGeneration && (await getSettings()).rdap) {
+        await chrome.storage.local.set({ rdapBootstrap: { map, expires: Date.now() + 86400000 } });
+        if (generation !== rdapGeneration) await chrome.storage.local.remove('rdapBootstrap');
+      }
       return map;
     })().catch((e) => {
       bootstrapPromise = null; // 次回やり直す
@@ -216,12 +221,19 @@ async function scorePhishing(desc) {
   return SiteRiskPhishing.analyze(desc, { psl, brands });
 }
 
+// タブごとの採点の処理番号。後から始まった採点があれば、先に始まった採点の結果は保存・反映しない
+const phishingScanSeq = new Map();
+
 async function handlePhishingScan(tabId, url, desc) {
   const generation = phishingGeneration;
+  const seq = (phishingScanSeq.get(tabId) || 0) + 1;
+  phishingScanSeq.set(tabId, seq);
+  const isStale = () => phishingScanSeq.get(tabId) !== seq || generation !== phishingGeneration;
   if (!(await getSettings()).phishing) return;
   const result = await scorePhishing({ ...desc, url });
-  // 採点中に無効化された場合は保存・反映しない
-  if (generation !== phishingGeneration || !(await getSettings()).phishing) return;
+  // 採点中に、より新しい採点が始まった・無効化された場合は保存・反映しない
+  // 設定の確認（await）の間に新しい採点が始まる可能性があるため、確認の後に処理番号を判定する
+  if (!(await getSettings()).phishing || isStale()) return;
   await chrome.storage.session.set({ ['phish:' + tabId]: { url, result } });
   if (generation !== phishingGeneration) {
     await chrome.storage.session.remove('phish:' + tabId);
@@ -311,6 +323,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   badgeSeq.delete(tabId);
   badgeUrl.delete(tabId);
+  phishingScanSeq.delete(tabId);
   chrome.storage.session.remove(['page:' + tabId, 'phish:' + tabId]);
 });
 

@@ -237,6 +237,8 @@ async function evalInWorker(worker, expression) {
       await evalInWorker(worker, `
         (async () => {
           await chrome.storage.local.set({ settings: { rdap: true } });
+          self.__realGetBootstrap = getBootstrap; // 後で元に戻す
+          self.__realLookup = SiteRiskRdap.lookupRegistration;
           getBootstrap = async () => ({ example: 'https://rdap.invalid/' });
           SiteRiskRdap.lookupRegistration = () => new Promise((r) =>
             setTimeout(() => r({ status: 'ok', registered: '2026-10-01T00:00:00Z' }), 3000));
@@ -255,6 +257,7 @@ async function evalInWorker(worker, expression) {
       const left = await evalInWorker(worker, `
         chrome.storage.local.get(null).then((all) => Object.keys(all).filter((k) => k.startsWith('rdap')))`);
       check(left && left.length === 0, `回帰: 照会中に RDAP をオフ → 遅れて届いた応答を保存しない（残り: ${left && (left.join(', ') || 'なし')}）`);
+      await evalInWorker(worker, `getBootstrap = self.__realGetBootstrap; SiteRiskRdap.lookupRegistration = self.__realLookup; bootstrapPromise = null; true`);
     });
 
     // ======== フィッシングの追加チェック ========
@@ -398,6 +401,54 @@ async function evalInWorker(worker, expression) {
       const st = await phishState('spa-signin.html');
       check(st && st.badge === '危険', `URL 変更後に遅れて描画されたフォーム → 危険（${st && st.phishing && st.phishing.score}点、バッジ「${st && st.badge}」）`);
       await setSetting({ phishing: false });
+    });
+
+    // ---- 回帰: 追加チェックの採点の完了順が逆転しても、古い結果で新しい結果を上書きしない ----
+    await step('回帰: 採点の完了順の逆転', async () => {
+      await setSetting({ phishing: true });
+      await sleep(2500);
+      const r = await evalInWorker(worker, `
+        (async () => {
+          const tabs = await chrome.tabs.query({});
+          const t = tabs.find((t) => (t.url || '').includes('spa-signin.html'));
+          self.__realScorePhishing2 = scorePhishing;
+          // 古い抽出結果（OLD）の採点だけを3秒遅らせ、新しい抽出結果（NEW）より後に完了させる
+          scorePhishing = (desc) => new Promise((res) => setTimeout(() => res(self.__realScorePhishing2(desc)), desc.title === 'OLD' ? 3000 : 100));
+          const sensitive = { fieldKinds: ['password', 'card'], action: 'http://harvest.other-domain.example/x', formActions: [], contextText: 'Microsoft サインイン', logoAlts: [] };
+          handlePhishingScan(t.id, t.url, { title: 'OLD', headings: [], forms: [sensitive], threat: { threat: true, deadline: true }, linkPairs: [], legal: { total: 0, empty: 0 } });
+          await new Promise((s) => setTimeout(s, 50));
+          handlePhishingScan(t.id, t.url, { title: 'NEW', headings: [], forms: [], threat: { threat: false, deadline: false }, linkPairs: [], legal: { total: 0, empty: 0 } });
+          await new Promise((s) => setTimeout(s, 4000));
+          scorePhishing = self.__realScorePhishing2;
+          const stored = (await chrome.storage.session.get('phish:' + t.id))['phish:' + t.id];
+          return { level: stored && stored.result.level, score: stored && stored.result.score, badge: await chrome.action.getBadgeText({ tabId: t.id }) };
+        })()`);
+      check(r && r.level === 'none' && r.badge === '',
+        `回帰: 後から完了した古い採点で、新しい結果を上書きしない（保存: ${r && r.level} ${r && r.score}点、バッジ「${r && r.badge}」）`);
+      await setSetting({ phishing: false });
+    });
+
+    // ---- 回帰: IANA の RDAP サーバー一覧の取得中に RDAP をオフにした場合、一覧を保存しない ----
+    await step('回帰: RDAP 一覧の取得中の無効化', async () => {
+      await evalInWorker(worker, `
+        (async () => {
+          await chrome.storage.local.set({ settings: { rdap: true } });
+          await chrome.storage.local.remove('rdapBootstrap');
+          bootstrapPromise = null;
+          self.__realFetchBootstrap = SiteRiskRdap.fetchBootstrap;
+          SiteRiskRdap.fetchBootstrap = () => new Promise((r) => setTimeout(() => r({ com: 'https://rdap.invalid/' }), 3000));
+          getBootstrap().catch(() => {}); // 取得を開始し、完了を待たずに次へ
+          return true;
+        })()`);
+      await sleep(500);
+      await setSetting({ rdap: false });
+      await sleep(4000);
+      const left = await evalInWorker(worker, `
+        (async () => {
+          SiteRiskRdap.fetchBootstrap = self.__realFetchBootstrap;
+          return Object.keys(await chrome.storage.local.get(null)).filter((k) => k.startsWith('rdap'));
+        })()`);
+      check(left && left.length === 0, `回帰: 一覧の取得中に RDAP をオフ → 遅れて届いた一覧を保存しない（残り: ${left && (left.join(', ') || 'なし')}）`);
     });
 
     worker.close();
