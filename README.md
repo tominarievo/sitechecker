@@ -21,6 +21,7 @@
 | `tools/update-blocklist.js` | 同梱ブラックリストの更新スクリプト |
 | `tools/urlscan-collect.js` | urlscan.io から日本語通販ページを収集（ルール改善用） |
 | `tools/auto-label.js` | 収集したページに URL の特徴で仮ラベルを付ける |
+| `tools/label-package.js` / `labeling/` | 外部の作業者向けのラベル付け依頼票の作成と回答の集計、作業手順書 |
 | `tools/periodic-check.js` / `tools/register-task.ps1` | 定期評価とタスクスケジューラへの登録 |
 | `tests/` | オフライン評価・単体テスト・E2E テスト・urlscan.io を使った評価 |
 | `icons/` | ツールバーアイコン |
@@ -225,6 +226,39 @@ node tools/human-review.js --make <収集フォルダ> --since 2026-10-08 --excl
 node tools/human-review.js --import <収集フォルダ>
 node tests/content-eval.js --samples <収集フォルダ> --labels <収集フォルダ>/labels-human.json
 ```
+
+### 出荷判定のための精度評価（外部の作業者によるラベル付け）
+
+出荷基準: **偽通販・正規サイト各300件以上で、検知率（注意以上）90%以上・誤検知率1%以下**（出荷時の設定＝同梱ブラックリストあり、RDAP・フィッシングの追加チェックはオフ）。
+
+1. **判定ルールに依存しない条件で集める**（ルール作りに使ったドメインは除外）
+
+   ```sh
+   node tools/urlscan-collect.js --frame generic --days 60 --pages 3 --max 600 --interval 1000 \
+     --exclude <ルール作りに使った収集フォルダ> --out <評価用フォルダ> --key-file ~/.urlscan-key
+   ```
+
+   日本語タイトルに一般的な語（の・を・に…）を含み、TLS 証明書が新しいページを集め、価格表示（¥・円）が5件以上の「通販らしいページ」だけを残します。価格表示は判定ルールでは使っていない特徴です。
+
+2. **外部の作業者向けの依頼票を作る**（手順と募集文は `labeling/`）
+
+   ```sh
+   node tools/label-package.js --make <評価用フォルダ> --gold <確認用問題のフォルダ>
+   ```
+
+   作業者に渡すのは、スクリーンショット画像の URL、無害化したドメイン名（`evil[.]example`）、ページタイトルだけです。正解が分かっている確認用の問題を約1割混ぜます。
+
+3. **回答を集計する**（確認用問題の正答率80%未満の作業者を除外し、多数決）
+
+   ```sh
+   node tools/label-package.js --import <評価用フォルダ> --answers 回答1.csv --answers 回答2.csv --answers 回答3.csv
+   ```
+
+4. **出荷基準と照合する**
+
+   ```sh
+   node tests/content-eval.js --samples <評価用フォルダ> --labels <評価用フォルダ>/labels-human.json --with-blocklist --target
+   ```
 
 ### E2E テスト（実ブラウザ）
 

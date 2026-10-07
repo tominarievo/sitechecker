@@ -22,7 +22,7 @@ require(path.join(__dirname, '..', 'page-analyzer.js'));
 const { analyze, THRESHOLD_CAUTION, THRESHOLD_DANGER } = globalThis.SiteRiskDetector;
 const { analyzePage } = globalThis.SiteRiskPageAnalyzer;
 
-const args = { samples: null, labels: null, legit: [], legitCache: null, missByPage: false };
+const args = { samples: null, labels: null, legit: [], legitCache: null, missByPage: false, withBlocklist: false, target: false };
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i]; const v = process.argv[i + 1];
   if (a === '--samples') { args.samples = v; i++; }
@@ -30,6 +30,8 @@ for (let i = 2; i < process.argv.length; i++) {
   else if (a === '--legit') { args.legit.push(v); i++; }
   else if (a === '--legit-cache') { args.legitCache = v; i++; }
   else if (a === '--miss-by-page') { args.missByPage = true; }
+  else if (a === '--with-blocklist') { args.withBlocklist = true; }
+  else if (a === '--target') { args.target = true; }
 }
 
 const pages = []; // { label, host, url, title, html }
@@ -58,11 +60,15 @@ if (args.legitCache) {
 }
 
 // ---- 判定 -------------------------------------------------------------------
+const blocklist = args.withBlocklist
+  ? new Set(fs.readFileSync(path.join(__dirname, '..', 'data', 'blocklist.txt'), 'utf8').split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith('#')))
+  : null;
 const rows = pages.map((p) => {
   const doc = htmlToText(fs.readFileSync(p.file, 'utf8'));
   const { isShop, signals } = analyzePage(doc);
-  const urlOnly = analyze(p.url || p.host);                       // ブラックリストは使わない（循環を避ける）
-  const combined = analyze(p.url || p.host, { pageSignals: signals });
+  // 既定ではブラックリストを使わない（ルール作りのデータとの循環を避ける）。--with-blocklist で出荷時と同じ設定にする
+  const urlOnly = analyze(p.url || p.host, { blocklist });
+  const combined = analyze(p.url || p.host, { blocklist, pageSignals: signals });
   const pageScore = Math.max(0, Math.min(100, signals.reduce((sum, s) => sum + s.points, 0)));
   return { ...p, title: p.title || doc.title, textLen: doc.text.length, isShop, signals,
     urlScore: urlOnly.score, urlReasons: urlOnly.reasons, score: combined.score, pageScore };
@@ -121,4 +127,20 @@ const miss = black.filter((r) => r[missKey] < THRESHOLD_CAUTION);
 if (miss.length) {
   console.log(`\n■ 詐欺ページの見逃し${args.missByPage ? '（ページ内容のみ）' : ''}（${miss.length}件、先頭15件）`);
   miss.slice(0, 15).forEach((r) => console.log(`  ${String(r[missKey]).padStart(3)}%  ${r.host}  「${r.title.slice(0, 30)}」 ${r.signals.map((s) => s.detail.replace(/（.*$/, '') + '+' + s.points).join(' / ')}`));
+}
+
+// ---- 出荷基準の判定（--target）: 偽通販・正規各300件以上、検知率90%以上、誤検知率1%以下 ----
+if (args.target) {
+  const det = black.filter((r) => r.score >= THRESHOLD_CAUTION).length / (black.length || 1);
+  const fpr = white.filter((r) => r.score >= THRESHOLD_CAUTION).length / (white.length || 1);
+  const checks = [
+    [black.length >= 300, `偽通販の件数 ${black.length} ≥ 300`],
+    [white.length >= 300, `正規サイトの件数 ${white.length} ≥ 300`],
+    [det >= 0.9, `検知率（注意以上）${(det * 100).toFixed(1)}% ≥ 90%`],
+    [fpr <= 0.01, `誤検知率（注意以上）${(fpr * 100).toFixed(1)}% ≤ 1%`],
+  ];
+  console.log(`
+■ 出荷基準（${args.withBlocklist ? 'ブラックリストあり＝出荷時の設定' : 'ブラックリストなし'}、RDAP・フィッシングの追加チェックはオフ）`);
+  checks.forEach(([ok, label]) => console.log(`  ${ok ? '✓' : '✗'} ${label}`));
+  console.log(checks.every(([ok]) => ok) ? '  → 基準を満たしています' : '  → 基準を満たしていません');
 }
