@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>詐欺サイトチェッカー プライバシーポリシー</title>
+  <style>
+    :root { --bg: #ffffff; --text: #1f2937; --muted: #6b7280; --border: #e5e7eb; --accent: #2563eb; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #111827; --text: #e5e7eb; --muted: #9ca3af; --border: #374151; --accent: #60a5fa; }
+    }
+    body { margin: 0; background: var(--bg); color: var(--text);
+      font: 16px/1.8 system-ui, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+    h1 { font-size: 1.6rem; line-height: 1.4; margin: 0 0 4px; }
+    h2 { font-size: 1.15rem; margin: 2em 0 .5em; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+    .date { color: var(--muted); font-size: .9rem; }
+    table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+    th, td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid var(--border); }
+    th { white-space: nowrap; }
+    a { color: var(--accent); }
+    code { font-size: .9em; }
+    hr { border: 0; border-top: 1px solid var(--border); margin: 3em 0; }
+    .table-wrap { overflow-x: auto; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>詐欺サイトチェッカー プライバシーポリシー</h1>
+  <p class="date">制定日: 2026年10月7日</p>
+
+  <p>ブラウザ拡張機能「詐欺サイトチェッカー」（以下「本拡張機能」）は、閲覧中のWebサイトが悪質な通販サイト・詐欺サイトである可能性を判定するためのツールです。本拡張機能は、利用者の個人情報や閲覧履歴を収集・保存・販売しません。</p>
+
+  <h2>1. 拡張機能内で扱う情報</h2>
+  <div class="table-wrap">
+  <table>
+    <tr><th>情報</th><th>用途</th><th>外部への送信</th></tr>
+    <tr><td>閲覧中のタブのURL</td><td>URL・ドメインの特徴から危険度を判定し、アイコンのバッジに表示するため</td><td>しません</td></tr>
+    <tr><td>閲覧中のページの本文・リンク</td><td>「特定商取引法に基づく表記」の有無などを判定するため。解析はブラウザ内で完結し、本文は保存しません</td><td>しません</td></tr>
+    <tr><td>手動チェック欄に入力したURL</td><td>入力されたURLの危険度を判定するため</td><td>しません（RDAP 有効時は登録ドメイン名のみ下記のとおり送信）</td></tr>
+  </table>
+  </div>
+
+  <h2>2. 外部への通信（ドメイン登録日の確認・初期設定はオフ）</h2>
+  <p>ポップアップの設定で「ドメイン登録日を確認する（RDAP）」を有効にした場合に限り、次の通信を行います。</p>
+  <ul>
+    <li><strong>IANA（data.iana.org）</strong>: TLD（<code>.com</code> など）ごとの RDAP サーバーの一覧を取得します（1日1回程度）。閲覧中のサイトの情報は含みません。</li>
+    <li><strong>各TLDのレジストリ（ドメイン登録管理機関）の RDAP サーバー</strong>: 閲覧中のサイトの<strong>登録ドメイン名のみ</strong>（例: <code>example.com</code>）を送信し、登録日を取得します。URLのパス、ページの内容、Cookie、利用者を識別する情報は送信しません。</li>
+  </ul>
+  <p>この機能は初期設定では無効です。いつでも設定から無効にでき、無効にすると保存済みの照会結果もすべて削除します。</p>
+
+  <h2>3. 端末内に保存する情報</h2>
+  <ul>
+    <li>設定（RDAP の有効・無効）</li>
+    <li>RDAP の照会結果（ドメイン名と登録日）: 同じドメインへの再照会を減らすため、照会から最長7日間保存します（照会に失敗した場合は最長6時間）。期限を過ぎた記録は、ブラウザの起動時と拡張機能の動作時（1時間に1回まで）に自動で削除します。</li>
+    <li>RDAP サーバーの一覧（IANA から取得したもの）: 最長1日間保存し、期限を過ぎたものは上記と同様に削除します。</li>
+    <li>タブごとのページ解析結果（判定の根拠のみ。ページの本文は含みません）: タブを閉じたとき、またはブラウザを終了したときに消去されます。</li>
+  </ul>
+  <p>これらはブラウザの拡張機能用ストレージにのみ保存され、開発者を含む第三者に送信されることはありません。本拡張機能をアンインストールすると削除されます。</p>
+
+  <h2>4. 同梱データ</h2>
+  <p>既知の詐欺サイトとの照合には、拡張機能に同梱したリスト（HaGeZi DNS Blocklists、GPL-3.0）を使用します。照合は端末内で行い、外部への問い合わせは行いません。</p>
+
+  <h2>5. 第三者への提供・広告</h2>
+  <p>本拡張機能は、利用者の情報を第三者に提供・販売しません。広告の表示や、利用状況の分析（アクセス解析）も行いません。</p>
+
+  <h2>6. 判定結果について</h2>
+  <p>判定は自動的な推定であり、正確性を保証するものではありません。正規のサイトを危険と判定したり、詐欺サイトを見逃したりする場合があります。</p>
+
+  <h2>7. お問い合わせ・改定</h2>
+  <p>本ポリシーに関するお問い合わせは、<a href="https://github.com/tominarievo/sitechecker/issues">GitHub の Issues</a> からお願いします。本ポリシーを改定する場合は、このページで公表します。</p>
+
+  <hr>
+
+  <h1 lang="en">Privacy Policy — Scam Site Checker</h1>
+  <div lang="en">
+  <p class="date">Effective: October 7, 2026</p>
+  <p>The "Scam Site Checker" browser extension estimates whether the website you are viewing may be a fraudulent online shop or scam site. It does not collect, store, sell, or share your personal information or browsing history.</p>
+  <h2>Data handled locally</h2>
+  <ul>
+    <li><strong>URL of the active tab</strong> — analyzed locally to calculate a risk score shown on the toolbar badge. Not transmitted.</li>
+    <li><strong>Page text and links</strong> — analyzed locally (e.g., to check for a legally required seller disclosure). Not stored and not transmitted.</li>
+    <li><strong>URLs entered in the manual check form</strong> — analyzed locally. Not transmitted (except the registrable domain when RDAP is enabled, see below).</li>
+  </ul>
+  <h2>Network requests (domain age check, off by default)</h2>
+  <p>This feature is off by default. Only if you enable "Check domain registration date (RDAP)" in the popup settings, the extension fetches the RDAP server list from IANA (data.iana.org) and sends <strong>only the registrable domain name</strong> (e.g., <code>example.com</code>) to the RDAP server of the registry that manages that top-level domain. No paths, page content, cookies, or identifiers are sent.</p>
+  <h2>Local storage</h2>
+  <ul>
+    <li><strong>Settings</strong> (whether RDAP is enabled).</li>
+    <li><strong>Cached RDAP results</strong> (domain name and registration date): kept for up to 7 days after the lookup (up to 6 hours for failed lookups) to avoid repeated queries. Expired records are deleted automatically when the browser starts and while the extension is running (at most once per hour). Disabling RDAP deletes all cached results.</li>
+    <li><strong>RDAP server list</strong> obtained from IANA: kept for up to 1 day and deleted the same way when expired.</li>
+    <li><strong>Per-tab analysis results</strong> (detected risk factors only, never the page text): cleared when the tab is closed or the browser exits.</li>
+  </ul>
+  <p>All of the above is stored only in the browser's extension storage, is never sent to the developer or third parties, and is removed when the extension is uninstalled.</p>
+  <h2>No sharing, no ads, no analytics</h2>
+  <p>The extension does not sell or share data with third parties, show ads, or use analytics.</p>
+  <h2>Contact</h2>
+  <p>Please contact us via <a href="https://github.com/tominarievo/sitechecker/issues">GitHub Issues</a>.</p>
+  </div>
+</main>
+</body>
+</html>

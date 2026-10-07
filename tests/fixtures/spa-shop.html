@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><title>【テスト用】SPA の模擬ページ</title></head>
+<body>
+  <div id="app">
+    <h1>サンプルショップ（テスト用の模擬ページです）</h1>
+    <p>こちらのページでは人気の商品をご紹介しています。ぜひお買い求めください。在庫がなくなり次第終了となりますので、お早めにどうぞ。</p>
+    <button>カートに入れる</button>
+    <footer><a href="/law.html">特定商取引法に基づく表記</a></footer>
+  </div>
+  <script>
+    // 1.5秒後に再読み込みなしで URL を変更（SPA の画面遷移）し、
+    // さらに 6 秒後（content.js の初回解析より後）に偽通販の内容を描画する
+    setTimeout(() => {
+      history.pushState({}, '', '/spa-item.html?id=1');
+      document.getElementById('app').innerHTML = '<p>読み込み中…</p>';
+    }, 1500);
+    setTimeout(() => {
+      document.getElementById('app').innerHTML = `
+        <h1>ブランド公式アウトレット（テスト用の模擬ページです）</h1>
+        <p>こちらのページでは人気の商品をご紹介しています。ぜひお買い求めください。在庫がなくなり次第終了となりますので、お早めにどうぞ。</p>
+        <button>カートに入れる</button>
+        <p>振込先：○○銀行 普通 1234567 口座名義：ヤマダ タロウ</p>
+        <p>販売業者：株式会社グローバルトレード</p>
+        <p>お问题があれば联系してください：shop-help@qq.com</p>
+        <p>这款商品は优惠价格で发货します。</p>`;
+    }, 7500);
+  </script>
+</body>
+</html>

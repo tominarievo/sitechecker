@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>詐欺サイトチェッカー</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --safe: #16a34a;
+      --caution: #d97706;
+      --danger: #dc2626;
+      --neutral: #94a3b8;
+      --accent: #2563eb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --border: #334155;
+        --safe: #22c55e;
+        --caution: #f59e0b;
+        --danger: #f87171;
+        --accent: #60a5fa;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      width: 380px;
+      margin: 0;
+      padding: 12px;
+      background: var(--bg);
+      color: var(--text);
+      font: 13px/1.5 system-ui, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
+    }
+    h1 {
+      font-size: 15px;
+      margin: 0 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    h2 {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      margin: 0 0 8px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .result { --level: var(--neutral); }
+    .result[data-level="safe"] { --level: var(--safe); }
+    .result[data-level="caution"] { --level: var(--caution); }
+    .result[data-level="danger"] { --level: var(--danger); }
+    .result .head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .score {
+      flex: none;
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      border: 6px solid var(--level);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--level);
+    }
+    .score .num { font-size: 26px; font-weight: 800; line-height: 1; }
+    .score .num small { font-size: 13px; }
+    .score .lbl { font-size: 11px; font-weight: 700; margin-top: 2px; }
+    .meta { min-width: 0; flex: 1; }
+    .meta .domain {
+      font-size: 17px;
+      font-weight: 700;
+      word-break: break-all;
+    }
+    .meta .url {
+      color: var(--muted);
+      font-size: 11px;
+      word-break: break-all;
+      max-height: 4.5em;
+      overflow: hidden;
+    }
+    .verdict {
+      margin-top: 10px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      color: #fff;
+      background: var(--level);
+    }
+    .reasons { margin: 10px 0 0; padding-left: 0; list-style: none; }
+    .reasons li {
+      display: flex;
+      gap: 8px;
+      padding: 6px 0;
+      border-top: 1px solid var(--border);
+    }
+    .reasons .cat {
+      flex: none;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--level) 18%, transparent);
+      color: var(--level);
+      height: fit-content;
+    }
+    .reasons .detail { flex: 1; word-break: break-all; }
+    .reasons .pts { flex: none; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .empty { color: var(--muted); margin-top: 8px; }
+    form { display: flex; gap: 6px; }
+    input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      padding: 7px 9px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      font: inherit;
+    }
+    input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+    button {
+      padding: 7px 14px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover { filter: brightness(1.1); }
+    #manualResult { margin-top: 10px; }
+    #manualResult:empty { display: none; }
+    #manualResult .card { margin: 0; }
+    .meta .age { color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .reasons .pts.neg { color: var(--safe); }
+    .settings label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+    .settings input { margin-top: 3px; }
+    .settings small { display: block; color: var(--muted); font-size: 11px; }
+    .note { color: var(--muted); font-size: 11px; margin: 4px 2px 0; }
+  </style>
+</head>
+<body>
+  <h1>🛡️ 詐欺サイトチェッカー</h1>
+
+  <section>
+    <h2>現在のタブ</h2>
+    <div id="currentResult"></div>
+  </section>
+
+  <section class="card">
+    <h2>URL・ドメインを手動で診断</h2>
+    <form id="checkForm" autocomplete="off">
+      <input type="text" id="checkInput" placeholder="例: https://example.jp.net/item-abc123.html" required>
+      <button type="submit">診断</button>
+    </form>
+    <div id="manualResult"></div>
+  </section>
+
+  <section class="card settings">
+    <h2>設定</h2>
+    <label>
+      <input type="checkbox" id="rdapToggle">
+      <span>ドメイン登録日を確認する（RDAP）
+        <small>登録したばかりのドメインを検出します。ドメイン名のみを、そのドメインを管理するレジストリに問い合わせます（URLのパスや閲覧内容は送信しません）。</small>
+      </span>
+    </label>
+  </section>
+
+  <p class="note">※ URL構造・ドメイン年齢・ページ内容に基づく自動判定です。安全と表示されても、運営者情報・支払い方法などを必ずご確認ください。</p>
+
+  <script src="popup.js"></script>
+</body>
+</html>
