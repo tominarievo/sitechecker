@@ -170,6 +170,7 @@ async function evalInWorker(worker, expression) {
       // RDAP を有効にし、照会を「5秒遅れて『登録5日前』と返す」偽物に差し替える（外部には問い合わせない）
       await evalInWorker(worker, `
         chrome.storage.local.set({ settings: { rdap: true } }).then(() => {
+          self.__realGetDomainInfo = getDomainInfo; // 後で元に戻す
           getDomainInfo = () => new Promise((r) => setTimeout(() => r({ status: 'ok', registered: new Date(Date.now() - 5 * 86400000).toISOString() }), 5000));
           return true;
         })`);
@@ -183,7 +184,7 @@ async function evalInWorker(worker, expression) {
       await sleep(8000); // 遅延させた判定（5秒）が終わるのを待つ
       const race = await badgeOf("(u) => u.includes('after-slow')");
       check(race && race.badge === '', `回帰: 判定中に正規ページへ移動 → 前のページの「危険」が残らない（バッジ「${race && race.badge}」）`);
-      await evalInWorker(worker, `chrome.storage.local.set({ settings: { rdap: false } }).then(() => true)`);
+      await evalInWorker(worker, `chrome.storage.local.set({ settings: { rdap: false } }).then(() => { getDomainInfo = self.__realGetDomainInfo; return true; })`);
     });
 
     // ---- 5. 回帰: SPA（再読み込みなしの URL 変更）と、遅れて描画される内容への追随 ----
@@ -227,6 +228,32 @@ async function evalInWorker(worker, expression) {
       const afterOff = await evalInWorker(worker, `
         chrome.storage.local.get(null).then((all) => Object.keys(all).filter((k) => k.startsWith('rdap')))`);
       check(afterOff && afterOff.length === 0, `RDAP をオフにすると照会結果をすべて削除（残り ${afterOff && afterOff.length} 件）`);
+    });
+
+    // ---- 7. 回帰: 照会中に RDAP をオフにした場合、遅れて届いた応答をキャッシュに保存しない ----
+    // 「照会開始 → 設定オフ（キャッシュ削除）→ 遅延応答」の順。照会は偽物に差し替え、外部には問い合わせない
+    await step('回帰: 照会中の無効化', async () => {
+      await evalInWorker(worker, `
+        (async () => {
+          await chrome.storage.local.set({ settings: { rdap: true } });
+          getBootstrap = async () => ({ example: 'https://rdap.invalid/' });
+          SiteRiskRdap.lookupRegistration = () => new Promise((r) =>
+            setTimeout(() => r({ status: 'ok', registered: '2026-10-01T00:00:00Z' }), 3000));
+          getDomainInfo('inflight.example'); // 応答を待たずに次へ（照会中の状態を作る）
+          return true;
+        })()`);
+      await sleep(500);
+      const popupTarget = (await getJson('/json/list')).find((t) => t.type === 'page' && t.url.endsWith('/popup.html'));
+      const popup = cdp(popupTarget.webSocketDebuggerUrl);
+      await popup.ready;
+      await popup.send('Runtime.evaluate', {
+        expression: `chrome.runtime.sendMessage({ type: 'setSettings', settings: { rdap: false } })`, awaitPromise: true,
+      });
+      popup.close();
+      await sleep(4000); // 遅延応答（3秒）が届くのを待つ
+      const left = await evalInWorker(worker, `
+        chrome.storage.local.get(null).then((all) => Object.keys(all).filter((k) => k.startsWith('rdap')))`);
+      check(left && left.length === 0, `回帰: 照会中に RDAP をオフ → 遅れて届いた応答を保存しない（残り: ${left && (left.join(', ') || 'なし')}）`);
     });
 
     worker.close();

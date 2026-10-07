@@ -55,23 +55,33 @@ function getBootstrap() {
 }
 
 const rdapInflight = new Map();
+// キャッシュの世代。RDAP を無効化するたびに進め、無効化前に始まった照会の応答を保存しないために使う
+let rdapGeneration = 0;
+
 async function getDomainInfo(domain) {
   const key = 'rdap:' + domain;
   const cached = (await chrome.storage.local.get(key))[key];
   if (cached && cached.expires > Date.now()) return cached.info;
 
   if (!rdapInflight.has(domain)) {
-    rdapInflight.set(domain, (async () => {
+    const generation = rdapGeneration;
+    const promise = (async () => {
       let info;
       try {
         info = await SiteRiskRdap.lookupRegistration(domain, { bootstrap: await getBootstrap() });
       } catch (e) {
         info = { status: 'error', error: 'bootstrap: ' + e.message };
       }
-      const ttl = info.status === 'ok' ? RDAP_TTL_OK : info.status === 'error' ? RDAP_TTL_ERROR : RDAP_TTL_FAIL;
-      await chrome.storage.local.set({ [key]: { info, expires: Date.now() + ttl } });
+      // 照会中に RDAP が無効化された場合は保存しない（世代の変化と、保存直前の設定の両方を確認）
+      if (generation === rdapGeneration && (await getSettings()).rdap) {
+        const ttl = info.status === 'ok' ? RDAP_TTL_OK : info.status === 'error' ? RDAP_TTL_ERROR : RDAP_TTL_FAIL;
+        await chrome.storage.local.set({ [key]: { info, expires: Date.now() + ttl } });
+      }
       return info;
-    })().finally(() => rdapInflight.delete(domain)));
+    })().finally(() => {
+      if (rdapInflight.get(domain) === promise) rdapInflight.delete(domain);
+    });
+    rdapInflight.set(domain, promise);
   }
   return rdapInflight.get(domain);
 }
@@ -92,6 +102,8 @@ async function purgeExpiredRdap(force) {
 
 /** RDAP を無効にしたときは、保存済みの照会結果をすべて削除する */
 async function clearRdapCache() {
+  rdapGeneration++;      // 照会中の応答を、この後に保存させない
+  rdapInflight.clear();  // 照会中の結果を、再び有効化した後に使い回さない
   const all = await chrome.storage.local.get(null);
   const keys = Object.keys(all).filter((k) => k.startsWith('rdap:') || k === 'rdapBootstrap');
   if (keys.length) await chrome.storage.local.remove(keys);

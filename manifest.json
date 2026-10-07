@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "詐欺サイトチェッカー",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "閲覧中のURL・ドメイン・ページ内容を解析し、悪質ECサイト・詐欺サイトの危険度を判定します。",
   "permissions": ["tabs", "storage"],
   "background": {
