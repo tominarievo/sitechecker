@@ -1,0 +1,107 @@
+{
+  "clientDate": "2026-10-08",
+  "version": "1.1.1",
+  "evaluatedAtUtc": "2026-10-07T15:23:57.930Z",
+  "detectorSha256": "351b2fda3c8180ae6c50cbad2860f7486ec1188883c126233e62ba6d4359aa12",
+  "sources": {
+    "retrieved_at_utc": "2026-10-07T15:22:26.264709+00:00",
+    "client_date": "2026-10-08",
+    "sources": [
+      {
+        "source": "https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt",
+        "file": "openphish.txt",
+        "sha256": "1aea6972ae1867b556c4b31aecc4ae2c530c17ab34ae8f3ad857aa0b45c4c57f"
+      },
+      {
+        "source": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202604.csv",
+        "file": "jpcert-202604.csv",
+        "sha256": "8ac88a336c2704070e4df6d109df4d642b36c4aa1a38ff4a65c4acdf5a6b3576"
+      },
+      {
+        "source": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202605.csv",
+        "file": "jpcert-202605.csv",
+        "sha256": "55f3fd40476f53316e2f527ca3e1ffaf4c11b55caa026ca80dcb0fa30758d7b6"
+      }
+    ]
+  },
+  "conditions": "URL only; no page text or RDAP; no phishing URLs visited; blocklist host/parent and estimated registrable-domain overlaps excluded; thresholds 40/80",
+  "limitations": "Third-party phishing labels, not fake-shop-specific. Historical development-data overlap is unknown. Legitimate controls are existing project fixtures, not a newly independent sample. No pre-agreed acceptance threshold.",
+  "datasets": [
+    {
+      "source": "OpenPhish",
+      "raw": 300,
+      "invalid": 0,
+      "duplicate": 0,
+      "excludedOverlap": 11,
+      "total": 289,
+      "detected": 53,
+      "missed": 236,
+      "danger": 0,
+      "cautionOrAbovePercent": 18.34,
+      "dangerPercent": 0,
+      "uniqueHosts": 251,
+      "whitelisted": 0
+    },
+    {
+      "source": "jpcert-202604",
+      "raw": 3071,
+      "invalid": 0,
+      "duplicate": 61,
+      "excludedOverlap": 33,
+      "total": 2977,
+      "detected": 366,
+      "missed": 2611,
+      "danger": 0,
+      "cautionOrAbovePercent": 12.29,
+      "dangerPercent": 0,
+      "uniqueHosts": 2587,
+      "whitelisted": 0
+    },
+    {
+      "source": "jpcert-202605",
+      "raw": 1743,
+      "invalid": 0,
+      "duplicate": 93,
+      "excludedOverlap": 5,
+      "total": 1645,
+      "detected": 349,
+      "missed": 1296,
+      "danger": 0,
+      "cautionOrAbovePercent": 21.22,
+      "dangerPercent": 0,
+      "uniqueHosts": 1350,
+      "whitelisted": 0
+    }
+  ],
+  "combinedUniqueUrls": {
+    "total": 4903,
+    "detected": 764,
+    "missed": 4139,
+    "danger": 0,
+    "cautionOrAbovePercent": 15.58,
+    "dangerPercent": 0,
+    "uniqueHosts": 4175,
+    "whitelisted": 0
+  },
+  "hostMedianScores": {
+    "total": 4175,
+    "detected": 726,
+    "missed": 3449,
+    "danger": 0,
+    "cautionOrAbovePercent": 17.39,
+    "dangerPercent": 0,
+    "uniqueHosts": 4175,
+    "whitelisted": 0
+  },
+  "legitimateControls": {
+    "total": 90,
+    "detected": 0,
+    "missed": 90,
+    "danger": 0,
+    "cautionOrAbovePercent": 0,
+    "dangerPercent": 0,
+    "uniqueHosts": 90,
+    "whitelisted": 0,
+    "meaning": "detected means false positive for these legitimate controls"
+  }
+}

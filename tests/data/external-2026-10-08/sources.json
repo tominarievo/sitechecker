@@ -1,0 +1,21 @@
+{
+  "retrieved_at_utc": "2026-10-07T15:22:26.264709+00:00",
+  "client_date": "2026-10-08",
+  "sources": [
+    {
+      "source": "https://raw.githubusercontent.com/openphish/public_feed/refs/heads/main/feed.txt",
+      "file": "openphish.txt",
+      "sha256": "1aea6972ae1867b556c4b31aecc4ae2c530c17ab34ae8f3ad857aa0b45c4c57f"
+    },
+    {
+      "source": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202604.csv",
+      "file": "jpcert-202604.csv",
+      "sha256": "8ac88a336c2704070e4df6d109df4d642b36c4aa1a38ff4a65c4acdf5a6b3576"
+    },
+    {
+      "source": "https://raw.githubusercontent.com/JPCERTCC/phishurl-list/main/2026/202605.csv",
+      "file": "jpcert-202605.csv",
+      "sha256": "55f3fd40476f53316e2f527ca3e1ffaf4c11b55caa026ca80dcb0fa30758d7b6"
+    }
+  ]
+}
