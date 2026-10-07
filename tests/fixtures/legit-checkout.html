@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><title>お支払い | サンプルショップ（テスト用）</title></head>
+<body>
+  <h1>お支払い情報の入力</h1>
+  <form method="post" action="/checkout/pay">
+    <label>カード番号 <input name="cardnumber" autocomplete="cc-number"></label>
+    <label>有効期限 <input name="exp" autocomplete="cc-exp"></label>
+    <label>セキュリティコード <input name="cvc" autocomplete="cc-csc"></label>
+    <button type="submit">注文を確定する</button>
+  </form>
+</body>
+</html>

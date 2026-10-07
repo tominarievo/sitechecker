@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "詐欺サイトチェッカー",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "閲覧中のURL・ドメイン・ページ内容を解析し、悪質ECサイト・詐欺サイトの危険度を判定します。",
   "permissions": ["tabs", "storage"],
   "background": {
@@ -10,7 +10,7 @@
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
-      "js": ["page-analyzer.js", "content.js"],
+      "js": ["page-analyzer.js", "phishing-analyzer.js", "phishing-dom.js", "content.js"],
       "run_at": "document_idle"
     }
   ],

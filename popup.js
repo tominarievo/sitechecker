@@ -104,6 +104,44 @@
     }
 
     container.appendChild(card);
+    renderPhishing(container, result, card);
+  }
+
+  const PHISHING_LEVEL = { danger: '危険', caution: '注意', none: '警告なし' };
+
+  /** フィッシングの追加チェック（有効な場合のみ）。偽通販判定（%）とは別に「点」で表示する */
+  function renderPhishing(container, result, mainCard) {
+    if (!result.phishingEnabled) return;
+    if (result.badgeSource === 'phishing') {
+      mainCard.appendChild(el('div', 'source', '※ ツールバーの警告は「フィッシングの追加チェック」によるものです（下記）'));
+    }
+    const card = el('div', 'card result phishing');
+    card.dataset.level = result.phishing ? (result.phishing.level === 'none' ? 'safe' : result.phishing.level) : '';
+    card.appendChild(el('h3', null, 'フィッシングの追加チェック'));
+    const p = result.phishing;
+    if (!p) {
+      card.appendChild(el('div', 'empty', result.manual
+        ? '手動診断では行いません（ページの入力フォームを調べるため、開いているタブが対象です）。'
+        : 'このページの解析結果はまだありません（読み込み中の可能性があります）。'));
+      container.appendChild(card);
+      return;
+    }
+    const head = el('div');
+    head.append(el('span', 'points', `${p.score}点`), document.createTextNode(`（${PHISHING_LEVEL[p.level]}）`));
+    card.appendChild(head);
+    if (p.reasons.length) {
+      const list = el('ul', 'reasons');
+      p.reasons.forEach((r) => {
+        const li = el('li');
+        li.append(el('span', 'detail', r.detail), el('span', 'pts', `+${r.points}点`));
+        list.appendChild(li);
+      });
+      card.appendChild(list);
+    }
+    card.appendChild(el('div', 'empty', p.level === 'none'
+      ? '警告に至る根拠は見つかりませんでした。安全を保証するものではありません。'
+      : '点数は暫定の基準による目安で、詐欺である確率ではありません。'));
+    container.appendChild(card);
   }
 
   async function showCurrentTab() {
@@ -116,6 +154,7 @@
       }
       renderMessage(container, '判定中…');
       renderResult(container, await send({ type: 'analyze', url: tab.url, tabId: tab.id }));
+
     } catch (e) {
       renderMessage(container, 'タブ情報の取得に失敗しました: ' + e.message);
     }
@@ -128,17 +167,25 @@
     form.addEventListener('submit', async (ev) => {
       ev.preventDefault();
       renderMessage(output, '判定中…');
-      renderResult(output, await send({ type: 'analyze', url: input.value }));
+      renderResult(output, { ...(await send({ type: 'analyze', url: input.value })), manual: true });
     });
   }
 
   async function setupSettings() {
     const rdap = document.getElementById('rdapToggle');
+    const phishing = document.getElementById('phishingToggle');
     const settings = await send({ type: 'getSettings' });
     rdap.checked = !!settings.rdap;
+    phishing.checked = !!settings.phishing;
     rdap.addEventListener('change', async () => {
       await send({ type: 'setSettings', settings: { rdap: rdap.checked } });
       showCurrentTab();
+    });
+    phishing.addEventListener('change', async () => {
+      await send({ type: 'setSettings', settings: { phishing: phishing.checked } });
+      showCurrentTab();
+      // 有効化した場合、開いているページの解析結果が届くまで少し待って表示を更新する
+      if (phishing.checked) setTimeout(showCurrentTab, 1500);
     });
   }
 

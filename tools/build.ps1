@@ -13,7 +13,9 @@ $version = $manifest.version
 
 $files = @(
   'manifest.json', 'background.js', 'detector.js', 'rdap.js', 'page-analyzer.js', 'content.js',
-  'popup.html', 'popup.js', 'data/blocklist.txt', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
+  'psl.js', 'phishing-analyzer.js', 'phishing-dom.js',
+  'popup.html', 'popup.js', 'data/blocklist.txt', 'data/public_suffix_list.dat', 'data/brands.json',
+  'LICENSE', 'THIRD_PARTY_NOTICES.md',
   'icons/icon16.png', 'icons/icon32.png', 'icons/icon48.png', 'icons/icon128.png'
 )
 
@@ -30,6 +32,10 @@ foreach ($m in [regex]::Matches($bg, "importScripts\(([^)]*)\)")) {
   foreach ($q in [regex]::Matches($m.Groups[1].Value, "'([^']+)'")) {
     if ($files -notcontains $q.Groups[1].Value) { throw "background.js が読み込む $($q.Groups[1].Value) が ZIP の対象に入っていません" }
   }
+}
+# background.js が chrome.runtime.getURL で読み込む同梱データ
+foreach ($m in [regex]::Matches($bg, "getURL\('([^']+)'\)")) {
+  if ($files -notcontains $m.Groups[1].Value) { throw "background.js が読み込む $($m.Groups[1].Value) が ZIP の対象に入っていません" }
 }
 foreach ($f in $files) {
   if (-not (Test-Path (Join-Path $Root $f))) { throw "ファイルがありません: $f" }

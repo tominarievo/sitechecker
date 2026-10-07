@@ -155,6 +155,9 @@
     .settings input { margin-top: 3px; }
     .settings small { display: block; color: var(--muted); font-size: 11px; }
     .note { color: var(--muted); font-size: 11px; margin: 4px 2px 0; }
+    .phishing h3 { font-size: 13px; margin: 0 0 6px; }
+    .phishing .points { font-size: 20px; font-weight: 800; color: var(--level); }
+    .source { margin-top: 8px; font-size: 11px; font-weight: 700; color: var(--level); }
   </style>
 </head>
 <body>
@@ -180,6 +183,12 @@
       <input type="checkbox" id="rdapToggle">
       <span>ドメイン登録日を確認する（RDAP）
         <small>登録したばかりのドメインを検出します。ドメイン名のみを、そのドメインを管理するレジストリに問い合わせます（URLのパスや閲覧内容は送信しません）。</small>
+      </span>
+    </label>
+    <label style="margin-top: 10px;">
+      <input type="checkbox" id="phishingToggle">
+      <span>フィッシングの追加チェックを有効にする
+        <small>端末内で解析します。検知には限界があるため、ブラウザ標準の保護機能と併用してください。ログイン・決済フォームの種類と送信先を調べます（入力した内容は読み取りません）。</small>
       </span>
     </label>
   </section>

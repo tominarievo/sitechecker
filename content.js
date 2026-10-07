@@ -4,6 +4,7 @@
  *
  * - 初回の解析に加え、遅れて描画される内容（DOM の変化）にも追随する
  * - SPA（ページを再読み込みせずに URL が変わるサイト）では、URL が変わるたびに解析し直す
+ * - フィッシングの追加チェックは、設定で有効にした場合だけ行う（設定の変更は開いているタブにも即時に反映）
  */
 (function () {
   'use strict';
@@ -14,9 +15,19 @@
   const MAX_RUNS_PER_URL = 10;     // 1つの URL で解析する回数の上限（常に変化し続けるページ対策）
 
   let lastSent = '';
+  let lastPhishingSent = '';
+  let phishingEnabled = false;
   let currentUrl = location.href;
   let runsForUrl = 0;
   let timer = null;
+
+  function send(message) {
+    try {
+      chrome.runtime.sendMessage(message);
+    } catch (_) {
+      // 拡張機能の再読み込み直後など、接続できない場合は無視
+    }
+  }
 
   function collect() {
     timer = null;
@@ -30,12 +41,19 @@
     const result = SiteRiskPageAnalyzer.analyzePage({ text, title: document.title, links });
     // URL も含めて比較し、URL が変わったら検出内容が同じでも送り直す
     const key = location.href + '\n' + JSON.stringify(result.signals);
-    if (key === lastSent) return;
-    lastSent = key;
-    try {
-      chrome.runtime.sendMessage({ type: 'pageSignals', url: location.href, signals: result.signals });
-    } catch (_) {
-      // 拡張機能の再読み込み直後など、接続できない場合は無視
+    if (key !== lastSent) {
+      lastSent = key;
+      send({ type: 'pageSignals', url: location.href, signals: result.signals });
+    }
+
+    // フィッシングの追加チェック（有効な場合のみ）。入力欄の種類・送信先・周辺の文言だけを渡し、入力値は読まない
+    if (phishingEnabled) {
+      const desc = SiteRiskPhishingDom.describePage();
+      const pkey = JSON.stringify(desc);
+      if (pkey !== lastPhishingSent) {
+        lastPhishingSent = pkey;
+        send({ type: 'phishingScan', url: location.href, desc });
+      }
     }
   }
 
@@ -58,6 +76,26 @@
   new MutationObserver(() => {
     if (runsForUrl < MAX_RUNS_PER_URL) schedule(MUTATION_DELAY_MS, false);
   }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+
+  // 設定（フィッシングの追加チェック）の読み込みと、変更への追随
+  function applySettings(settings) {
+    const enabled = !!(settings && settings.phishing);
+    if (enabled === phishingEnabled) return;
+    phishingEnabled = enabled;
+    lastPhishingSent = '';
+    if (enabled) {
+      runsForUrl = 0;
+      schedule(0, true); // 有効化されたら、開いているページもすぐに解析する
+    }
+  }
+  try {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local' && changes.settings) applySettings(changes.settings.newValue);
+    });
+    chrome.storage.local.get('settings').then(({ settings }) => applySettings(settings)).catch(() => {});
+  } catch (_) {
+    // 拡張機能のコンテキストが無効になった場合は無視
+  }
 
   collect();
 })();

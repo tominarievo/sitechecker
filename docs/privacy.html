@@ -41,7 +41,16 @@
   </table>
   </div>
 
-  <h2>2. 外部への通信（ドメイン登録日の確認・初期設定はオフ）</h2>
+  <h2>2. フィッシングの追加チェック（初期設定はオフ）</h2>
+  <p>ポップアップの設定で「フィッシングの追加チェックを有効にする」をオンにした場合に限り、閲覧中のページの入力フォームについて、入力欄の種類（パスワード欄・カード番号欄など）、フォームの送信先、周辺の表示文言を調べます。</p>
+  <ul>
+    <li>解析はブラウザ内で完結し、外部への通信は一切行いません（この機能のために、外部のサーバーやAPIに問い合わせることはありません）。</li>
+    <li>利用者が入力した内容（パスワード、カード番号、ワンタイムパスワード等）は読み取りません。</li>
+    <li>保存するのは判定の根拠（該当したチェックの種類、関係するドメイン名、点数）だけで、ページの本文や入力値は保存しません。</li>
+    <li>無効にすると、保存済みの判定結果を削除します。</li>
+  </ul>
+
+  <h2>3. 外部への通信（ドメイン登録日の確認・初期設定はオフ）</h2>
   <p>ポップアップの設定で「ドメイン登録日を確認する（RDAP）」を有効にした場合に限り、次の通信を行います。</p>
   <ul>
     <li><strong>IANA（data.iana.org）</strong>: TLD（<code>.com</code> など）ごとの RDAP サーバーの一覧を取得します（1日1回程度）。閲覧中のサイトの情報は含みません。</li>
@@ -49,25 +58,26 @@
   </ul>
   <p>この機能は初期設定では無効です。いつでも設定から無効にでき、無効にすると保存済みの照会結果もすべて削除します。</p>
 
-  <h2>3. 端末内に保存する情報</h2>
+  <h2>4. 端末内に保存する情報</h2>
   <ul>
     <li>設定（RDAP の有効・無効）</li>
     <li>RDAP の照会結果（ドメイン名と登録日）: 同じドメインへの再照会を減らすため、照会から最長7日間保存します（照会に失敗した場合は最長6時間）。期限を過ぎた記録は、ブラウザの起動時と拡張機能の動作時（1時間に1回まで）に自動で削除します。</li>
     <li>RDAP サーバーの一覧（IANA から取得したもの）: 最長1日間保存し、期限を過ぎたものは上記と同様に削除します。</li>
     <li>タブごとのページ解析結果（判定の根拠のみ。ページの本文は含みません）: タブを閉じたとき、またはブラウザを終了したときに消去されます。</li>
+    <li>フィッシングの追加チェックのタブごとの結果（判定の根拠と点数のみ。入力値やページの本文は含みません）: タブを閉じたとき、ブラウザを終了したとき、またはこの機能を無効にしたときに消去されます。</li>
   </ul>
   <p>これらはブラウザの拡張機能用ストレージにのみ保存され、開発者を含む第三者に送信されることはありません。本拡張機能をアンインストールすると削除されます。</p>
 
-  <h2>4. 同梱データ</h2>
-  <p>既知の詐欺サイトとの照合には、拡張機能に同梱したリスト（HaGeZi DNS Blocklists、GPL-3.0）を使用します。照合は端末内で行い、外部への問い合わせは行いません。</p>
+  <h2>5. 同梱データ</h2>
+  <p>既知の詐欺サイトとの照合には、拡張機能に同梱したリスト（HaGeZi DNS Blocklists、GPL-3.0）を使用します。フィッシングの追加チェックでは、同梱した Public Suffix List（MPL-2.0）とブランドの公式ドメインの対応表を使用します。いずれも照合は端末内で行い、外部への問い合わせは行いません。</p>
 
-  <h2>5. 第三者への提供・広告</h2>
+  <h2>6. 第三者への提供・広告</h2>
   <p>本拡張機能は、利用者の情報を第三者に提供・販売しません。広告の表示や、利用状況の分析（アクセス解析）も行いません。</p>
 
-  <h2>6. 判定結果について</h2>
+  <h2>7. 判定結果について</h2>
   <p>判定は自動的な推定であり、正確性を保証するものではありません。正規のサイトを危険と判定したり、詐欺サイトを見逃したりする場合があります。</p>
 
-  <h2>7. お問い合わせ・改定</h2>
+  <h2>8. お問い合わせ・改定</h2>
   <p>本ポリシーに関するお問い合わせは、<a href="https://github.com/tominarievo/sitechecker/issues">GitHub の Issues</a> からお願いします。本ポリシーを改定する場合は、このページで公表します。</p>
 
   <hr>
@@ -82,6 +92,8 @@
     <li><strong>Page text and links</strong> — analyzed locally (e.g., to check for a legally required seller disclosure). Not stored and not transmitted.</li>
     <li><strong>URLs entered in the manual check form</strong> — analyzed locally. Not transmitted (except the registrable domain when RDAP is enabled, see below).</li>
   </ul>
+  <h2>Additional phishing check (off by default)</h2>
+  <p>Only if you enable "additional phishing check" in the popup settings, the extension inspects the forms on the page you are viewing: the kinds of input fields (password, card number, etc.), where the form submits, and the surrounding visible text. The analysis runs entirely in your browser and makes no network requests. The extension never reads what you type (passwords, card numbers, one-time codes). Only the detected risk factors (check type, related domain names, points) are kept, and they are deleted when you disable the feature.</p>
   <h2>Network requests (domain age check, off by default)</h2>
   <p>This feature is off by default. Only if you enable "Check domain registration date (RDAP)" in the popup settings, the extension fetches the RDAP server list from IANA (data.iana.org) and sends <strong>only the registrable domain name</strong> (e.g., <code>example.com</code>) to the RDAP server of the registry that manages that top-level domain. No paths, page content, cookies, or identifiers are sent.</p>
   <h2>Local storage</h2>
@@ -90,6 +102,7 @@
     <li><strong>Cached RDAP results</strong> (domain name and registration date): kept for up to 7 days after the lookup (up to 6 hours for failed lookups) to avoid repeated queries. Expired records are deleted automatically when the browser starts and while the extension is running (at most once per hour). Disabling RDAP deletes all cached results.</li>
     <li><strong>RDAP server list</strong> obtained from IANA: kept for up to 1 day and deleted the same way when expired.</li>
     <li><strong>Per-tab analysis results</strong> (detected risk factors only, never the page text): cleared when the tab is closed or the browser exits.</li>
+    <li><strong>Per-tab phishing check results</strong> (risk factors and points only, never input values or page text): cleared when the tab is closed, the browser exits, or the feature is disabled.</li>
   </ul>
   <p>All of the above is stored only in the browser's extension storage, is never sent to the developer or third parties, and is removed when the extension is uninstalled.</p>
   <h2>No sharing, no ads, no analytics</h2>

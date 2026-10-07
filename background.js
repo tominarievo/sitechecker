@@ -1,15 +1,17 @@
 /**
  * Service Worker：タブの切り替え・更新を監視し、ツールバーアイコンのバッジを更新する。
- * 判定に必要な情報（ブラックリスト・RDAP・ページ内容）をここで集約し、popup にも結果を返す。
+ * 判定に必要な情報（ブラックリスト・RDAP・ページ内容・フィッシングの追加チェック）をここで集約し、popup にも結果を返す。
  */
-importScripts('detector.js', 'rdap.js');
+importScripts('detector.js', 'rdap.js', 'psl.js', 'phishing-analyzer.js');
 
 const BADGE = {
   danger: { text: '危険', color: '#dc2626' },
   caution: { text: '注意', color: '#f59e0b' },
 };
 
-const DEFAULT_SETTINGS = { rdap: false }; // 外部への送信を伴うため、利用者が有効にしたときだけ使う
+// rdap: 外部への送信を伴うため、利用者が有効にしたときだけ使う
+// phishing: フィッシングの追加チェック（端末内で解析）。利用者が有効にしたときだけ使う
+const DEFAULT_SETTINGS = { rdap: false, phishing: false };
 const RDAP_TTL_OK = 7 * 86400000;      // 登録日が取れた結果は7日間キャッシュ
 const RDAP_TTL_FAIL = 6 * 3600000;     // 失敗・非対応は6時間キャッシュ
 const RDAP_TTL_ERROR = 10 * 60000;     // 通信エラーは10分
@@ -25,6 +27,28 @@ function getBlocklist() {
       .catch(() => new Set());
   }
   return blocklistPromise;
+}
+
+// ---- フィッシングの追加チェック用のデータ（Public Suffix List・ブランド対応表を同梱） ----------
+
+let pslPromise = null;
+function getPsl() {
+  if (!pslPromise) {
+    pslPromise = fetch(chrome.runtime.getURL('data/public_suffix_list.dat'))
+      .then((res) => res.text())
+      .then((text) => SiteRiskPsl.parse(text));
+  }
+  return pslPromise;
+}
+
+let brandsPromise = null;
+function getBrands() {
+  if (!brandsPromise) {
+    brandsPromise = fetch(chrome.runtime.getURL('data/brands.json'))
+      .then((res) => res.json())
+      .then((json) => json.brands || []);
+  }
+  return brandsPromise;
 }
 
 // ---- 設定 -------------------------------------------------------------------
@@ -130,7 +154,8 @@ async function getPageSignals(tabId, url) {
 
 // ---- 判定 -------------------------------------------------------------------
 
-async function evaluate(url, tabId) {
+// 既存の判定（URL・ドメイン・ブラックリスト・RDAP・偽通販のページ内容）
+async function evaluateBase(url, tabId) {
   const first = SiteRiskDetector.analyze(url);
   if (first.level === 'invalid' || first.level === 'unsupported' || first.whitelisted) {
     return { ...first, rdapStatus: 'skipped' };
@@ -151,6 +176,67 @@ async function evaluate(url, tabId) {
 
   const result = SiteRiskDetector.analyze(url, { blocklist, domainInfo, pageSignals });
   return { ...result, rdapStatus };
+}
+
+const LEVEL_ORDER = { safe: 0, none: 0, caution: 1, danger: 2 };
+
+/**
+ * 既存の判定に、フィッシングの追加チェック（有効な場合のみ）の結果を添える。
+ * 2つの点数は足し合わせず、バッジには強い方の警告を出す。
+ * ホワイトリストで既存の判定が早期終了した場合も、追加チェックの結果は省略しない。
+ */
+async function evaluate(url, tabId) {
+  const base = await evaluateBase(url, tabId);
+  const settings = await getSettings();
+  const out = { ...base, phishingEnabled: !!settings.phishing, phishing: null, badgeLevel: base.level, badgeSource: 'base' };
+  if (!settings.phishing || tabId == null || base.level === 'invalid' || base.level === 'unsupported') return out;
+  const phishing = await getPhishingResult(tabId, url);
+  out.phishing = phishing;
+  if (phishing && LEVEL_ORDER[phishing.level] > LEVEL_ORDER[base.level]) {
+    out.badgeLevel = phishing.level;
+    out.badgeSource = 'phishing';
+  }
+  return out;
+}
+
+// ---- フィッシングの追加チェックの結果（タブごと。content.js の抽出結果を採点したもの） ----------
+
+// 世代番号。追加チェックを無効化するたびに進め、無効化前に始まった処理の結果を反映・保存しないために使う
+let phishingGeneration = 0;
+
+async function getPhishingResult(tabId, url) {
+  const key = 'phish:' + tabId;
+  const entry = (await chrome.storage.session.get(key))[key];
+  return entry && sameDocument(entry.url, url) ? entry.result : null;
+}
+
+/** 抽出結果を採点する（テストで遅延させられるよう関数として分けている） */
+async function scorePhishing(desc) {
+  const [psl, brands] = await Promise.all([getPsl(), getBrands()]);
+  return SiteRiskPhishing.analyze(desc, { psl, brands });
+}
+
+async function handlePhishingScan(tabId, url, desc) {
+  const generation = phishingGeneration;
+  if (!(await getSettings()).phishing) return;
+  const result = await scorePhishing({ ...desc, url });
+  // 採点中に無効化された場合は保存・反映しない
+  if (generation !== phishingGeneration || !(await getSettings()).phishing) return;
+  await chrome.storage.session.set({ ['phish:' + tabId]: { url, result } });
+  if (generation !== phishingGeneration) {
+    await chrome.storage.session.remove('phish:' + tabId);
+    return;
+  }
+  updateBadge(tabId, url);
+}
+
+/** 追加チェックを無効化: 進行中の処理を無効にし、結果を削除して、既存の判定だけでバッジを更新し直す */
+async function disablePhishing() {
+  phishingGeneration++;
+  const all = await chrome.storage.session.get(null);
+  const keys = Object.keys(all).filter((k) => k.startsWith('phish:'));
+  if (keys.length) await chrome.storage.session.remove(keys);
+  await scanAllTabs();
 }
 
 // 同じ文書か（# 以降の違いは同じページとみなす）
@@ -182,7 +268,7 @@ async function updateBadge(tabId, url) {
     return result; // タブが閉じられた
   }
 
-  const badge = BADGE[result.level];
+  const badge = BADGE[result.badgeLevel || result.level];
   try {
     await chrome.action.setBadgeText({ tabId, text: badge ? badge.text : '' });
     if (badge) {
@@ -191,10 +277,12 @@ async function updateBadge(tabId, url) {
         await chrome.action.setBadgeTextColor({ tabId, color: '#ffffff' });
       }
     }
+    const phishingNote = result.phishing && result.phishing.level !== 'none'
+      ? ` ／ フィッシングの追加チェック ${result.phishing.score}点` : '';
     await chrome.action.setTitle({
       tabId,
       title: result.hostname
-        ? `詐欺サイトチェッカー: ${result.hostname}（危険度 ${result.score}%）`
+        ? `詐欺サイトチェッカー: ${result.hostname}（偽通販判定 ${result.score}%${phishingNote}）`
         : '詐欺サイトチェッカー',
     });
   } catch (_) {
@@ -223,7 +311,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   badgeSeq.delete(tabId);
   badgeUrl.delete(tabId);
-  chrome.storage.session.remove('page:' + tabId);
+  chrome.storage.session.remove(['page:' + tabId, 'phish:' + tabId]);
 });
 
 // content.js / popup.js からのメッセージ
@@ -232,6 +320,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     const tabId = sender.tab.id;
     chrome.storage.session.set({ ['page:' + tabId]: { url: msg.url, signals: msg.signals || [] } })
       .then(() => updateBadge(tabId, msg.url));
+    return false;
+  }
+  if (msg.type === 'phishingScan' && sender.tab && msg.desc) {
+    handlePhishingScan(sender.tab.id, msg.url, msg.desc);
     return false;
   }
   if (msg.type === 'analyze') {
@@ -243,9 +335,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
   if (msg.type === 'setSettings') {
+    const turningOffPhishing = msg.settings && msg.settings.phishing === false;
+    if (turningOffPhishing) phishingGeneration++; // 進行中の採点を、この時点で無効にする
     getSettings()
       .then((s) => chrome.storage.local.set({ settings: { ...s, ...msg.settings } }))
       .then(() => (msg.settings && msg.settings.rdap === false ? clearRdapCache() : 0))
+      .then(() => (turningOffPhishing ? disablePhishing() : 0))
       .then(() => sendResponse({ ok: true }));
     return true;
   }

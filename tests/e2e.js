@@ -19,6 +19,7 @@ const BROWSER = process.argv[2] || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Ap
 const DEBUG_PORT = 9333;
 const FIXTURE_PORT = 8787;
 const SLOW_HOST = 'slowshop.top'; // 判定（RDAP）を遅延させる遷移テスト用の名前
+const PHISH_HOST = 'portal.sitechecker-test.net'; // 模擬フィッシングページ用の名前（ブラウザ内で 127.0.0.1 に向ける）
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // ---- 模擬ページ配信（127.0.0.1 のみ） -------------------------------------------
@@ -80,7 +81,7 @@ async function evalInWorker(worker, expression) {
     '--disable-background-networking', '--disable-sync',
     '--disable-features=msEdgeSidebarV2',
     // テスト用のドメイン名をローカル（127.0.0.1）に向ける。外部のサーバーには接続しない
-    `--host-resolver-rules=MAP ${SLOW_HOST} 127.0.0.1`,
+    `--host-resolver-rules=MAP ${SLOW_HOST} 127.0.0.1,MAP ${PHISH_HOST} 127.0.0.1`,
     'about:blank',
   ], { stdio: usePipe ? ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] : 'ignore' });
 
@@ -254,6 +255,149 @@ async function evalInWorker(worker, expression) {
       const left = await evalInWorker(worker, `
         chrome.storage.local.get(null).then((all) => Object.keys(all).filter((k) => k.startsWith('rdap')))`);
       check(left && left.length === 0, `回帰: 照会中に RDAP をオフ → 遅れて届いた応答を保存しない（残り: ${left && (left.join(', ') || 'なし')}）`);
+    });
+
+    // ======== フィッシングの追加チェック ========
+    // 模擬フィッシングページは PHISH_HOST（ブラウザ内で 127.0.0.1 に向けた名前）で配信する
+    const phishUrl = `http://${PHISH_HOST}:${FIXTURE_PORT}/phish-login.html`;
+    const popupPage = async () => {
+      const t = (await getJson('/json/list')).find((x) => x.type === 'page' && x.url.endsWith('/popup.html'));
+      const c = cdp(t.webSocketDebuggerUrl);
+      await c.ready;
+      return c;
+    };
+    const setSetting = async (settings) => {
+      const c = await popupPage();
+      await c.send('Runtime.evaluate', {
+        expression: `chrome.runtime.sendMessage({ type: 'setSettings', settings: ${JSON.stringify(settings)} })`, awaitPromise: true,
+      });
+      c.close();
+    };
+    const pageTarget = async (pred) => {
+      const t = (await getJson('/json/list')).find((x) => x.type === 'page' && pred(x.url));
+      const c = cdp(t.webSocketDebuggerUrl);
+      await c.ready;
+      return c;
+    };
+    const phishState = (match) => evalInWorker(worker, `
+      (async () => {
+        const tabs = await chrome.tabs.query({});
+        const t = tabs.find((t) => (t.url || '').includes('${match}'));
+        if (!t) return null;
+        const r = await evaluate(t.url, t.id);
+        const keys = Object.keys(await chrome.storage.session.get(null)).filter((k) => k.startsWith('phish:'));
+        return { badge: await chrome.action.getBadgeText({ tabId: t.id }), base: r.level, phishing: r.phishing, keys };
+      })()`);
+
+    await step('フィッシング: 初期状態はオフ', async () => {
+      const s = await evalInWorker(worker, `getSettings()`);
+      check(s.phishing === false, `初期設定でオフ（phishing=${s.phishing}）`);
+      await getJson(`/json/new?${phishUrl}`, 'PUT');
+      await sleep(4000);
+      const st = await phishState('phish-login');
+      check(st && st.badge === '' && st.phishing === null && st.keys.length === 0,
+        `オフ: 模擬フィッシングページでも追加解析をしない（バッジ「${st && st.badge}」、保存 ${st && st.keys.length} 件）`);
+    });
+
+    await step('フィッシング: オンにすると開いているタブに反映', async () => {
+      await setSetting({ phishing: true });
+      await sleep(4000);
+      const st = await phishState('phish-login');
+      check(st && st.badge === '危険' && st.phishing && st.phishing.level === 'danger',
+        `オン: 再読み込みなしで既存タブが「危険」（${st && st.phishing && st.phishing.score}点、バッジ「${st && st.badge}」）`);
+      const rules = st && st.phishing ? st.phishing.reasons.map((r) => r.detail.slice(0, 20)).join(' / ') : '';
+      check(st && st.phishing && st.phishing.reasons.length >= 3, `根拠を表示: ${rules}`);
+      check(st && st.base === 'safe', `既存の偽通販判定とは別に採点（既存判定: ${st && st.base}）`);
+    });
+
+    await step('フィッシング: 正規ページを誤検知しない', async () => {
+      for (const p of ['legit-login.html', 'legit-checkout.html', 'news-article.html']) await getJson(`/json/new?${base}/${p}`, 'PUT');
+      await sleep(4500);
+      for (const p of ['legit-login', 'legit-checkout', 'news-article']) {
+        const st = await phishState(p);
+        check(st && st.badge === '' && st.phishing && st.phishing.level === 'none',
+          `誤検知なし: ${p}（${st && st.phishing ? st.phishing.score + '点' : '結果なし'}、バッジ「${st && st.badge}」）`);
+      }
+    });
+
+    await step('フィッシング: 入力値を取得・保存しない', async () => {
+      await evalInWorker(worker, `
+        self.__lastPhishingDesc = '';
+        self.__realHandlePhishingScan = handlePhishingScan;
+        handlePhishingScan = (tabId, url, desc) => { self.__lastPhishingDesc += JSON.stringify(desc); return self.__realHandlePhishingScan(tabId, url, desc); };
+        true`);
+      const pg = await pageTarget((u) => u.includes('phish-login'));
+      await pg.send('Runtime.evaluate', { expression: `
+        document.querySelector('input[name=userid]').value = 'SECRET-USER-777';
+        document.querySelector('input[type=password]').value = 'SECRET-PW-123';
+        document.querySelector('input[name=cardnumber]').value = '4111111111111111';
+        document.body.appendChild(document.createElement('h2')).textContent = '再解析のきっかけ（見出しを追加）';
+        true` });
+      pg.close();
+      await sleep(3000);
+      const leaked = await evalInWorker(worker, `
+        (async () => {
+          const stored = JSON.stringify(await chrome.storage.session.get(null)) + JSON.stringify(await chrome.storage.local.get(null));
+          const seen = self.__lastPhishingDesc;
+          handlePhishingScan = self.__realHandlePhishingScan;
+          return { received: seen.length, hit: ['SECRET-USER-777', 'SECRET-PW-123', '4111111111111111'].filter((s) => stored.includes(s) || seen.includes(s)) };
+        })()`);
+      check(leaked && leaked.received > 0 && leaked.hit.length === 0,
+        `入力値を拡張機能に渡さず保存もしない（受信した抽出結果 ${leaked && leaked.received} 文字、入力値の混入 ${leaked && leaked.hit.length} 件）`);
+    });
+
+    await step('フィッシング: オフにすると追加警告が消え、既存の警告は残る', async () => {
+      await setSetting({ phishing: false });
+      await sleep(2500);
+      const st = await phishState('phish-login');
+      const fakeShop = await badgeOf("(u) => /127\\.0\\.0\\.1:8787\\/fake-shop\\.html$/.test(u)");
+      check(st && st.badge === '' && st.keys.length === 0, `オフ: 追加警告と保存結果を削除（バッジ「${st && st.badge}」、保存 ${st && st.keys.length} 件）`);
+      check(fakeShop && fakeShop.badge === '危険', `オフ: 既存の偽通販警告は保持（バッジ「${fakeShop && fakeShop.badge}」）`);
+    });
+
+    await step('フィッシング: 処理中にオフにした結果を反映しない', async () => {
+      await evalInWorker(worker, `
+        self.__realScorePhishing = scorePhishing;
+        scorePhishing = (desc) => new Promise((r) => setTimeout(() => r(self.__realScorePhishing(desc)), 3000));
+        true`);
+      await setSetting({ phishing: true }); // 有効化 → 開いているタブが抽出結果を送る（採点は3秒遅延）
+      await sleep(800);
+      await setSetting({ phishing: false }); // 採点の途中で無効化
+      await sleep(4000);
+      const st = await phishState('phish-login');
+      check(st && st.badge === '' && st.keys.length === 0, `処理中にオフ → 遅れた結果を反映・保存しない（バッジ「${st && st.badge}」、保存 ${st && st.keys.length} 件）`);
+      await evalInWorker(worker, `scorePhishing = self.__realScorePhishing; true`);
+    });
+
+    await step('フィッシング: オン→オフ→オンの切り替え', async () => {
+      await setSetting({ phishing: true });
+      await setSetting({ phishing: false });
+      await setSetting({ phishing: true });
+      await sleep(4000);
+      const st = await phishState('phish-login');
+      check(st && st.badge === '危険' && st.phishing && st.phishing.level === 'danger', `最終状態（オン）の結果だけを表示（バッジ「${st && st.badge}」）`);
+    });
+
+    await step('フィッシング: ページ遷移後に古い結果を反映しない', async () => {
+      await evalInWorker(worker, `
+        chrome.tabs.query({}).then((tabs) => {
+          const t = tabs.find((t) => (t.url || '').includes('phish-login'));
+          return chrome.tabs.update(t.id, { url: '${base}/legit-login.html?navigated' });
+        }).then(() => true)`);
+      await sleep(4000);
+      const st = await phishState('legit-login.html?navigated');
+      check(st && st.badge === '' && st.phishing && st.phishing.level === 'none', `遷移後のページには遷移前の結果を使わない（バッジ「${st && st.badge}」）`);
+    });
+
+    await step('フィッシング: SPA と遅延描画に追随', async () => {
+      await getJson(`/json/new?http://${PHISH_HOST}:${FIXTURE_PORT}/spa-phish.html`, 'PUT');
+      await sleep(4000);
+      const early = await phishState('spa-signin.html');
+      check(early && early.badge === '', `URL 変更直後（フォーム描画前）→ 警告なし（バッジ「${early && early.badge}」）`);
+      await sleep(7000);
+      const st = await phishState('spa-signin.html');
+      check(st && st.badge === '危険', `URL 変更後に遅れて描画されたフォーム → 危険（${st && st.phishing && st.phishing.score}点、バッジ「${st && st.badge}」）`);
+      await setSetting({ phishing: false });
     });
 
     worker.close();

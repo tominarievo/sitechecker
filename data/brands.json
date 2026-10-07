@@ -1,0 +1,41 @@
+{
+  "_comment": "フィッシングの追加チェックで使うブランドと公式ドメインの対応表。根拠を確認できたものだけを登録する（推測で追加しない）。officialDomains は登録ドメイン（Public Suffix List 基準）。",
+  "checkedAt": "2026-10-08",
+  "brands": [
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "keywords": ["amazon", "アマゾン"],
+      "officialDomains": ["amazon.co.jp", "amazon.com"],
+      "evidence": "www.amazon.co.jp と www.amazon.com の /ap/signin が、同一ドメイン内に送信するサインインフォーム（name=signIn、パスワード欄あり）を返すことを確認"
+    },
+    {
+      "id": "rakuten",
+      "name": "楽天",
+      "keywords": ["rakuten", "楽天"],
+      "officialDomains": ["rakuten.co.jp", "rakuten.com"],
+      "evidence": "grp01.id.rakuten.co.jp/rms/nid/login（ログインページ）と login.account.rakuten.com（OpenID 設定を公開する認証サーバー）が応答することを確認"
+    },
+    {
+      "id": "apple",
+      "name": "Apple",
+      "keywords": ["apple id", "apple account", "icloud", "アップル"],
+      "officialDomains": ["apple.com", "icloud.com"],
+      "evidence": "appleid.apple.com/sign-in（サインインページ）と www.icloud.com が応答することを確認"
+    },
+    {
+      "id": "microsoft",
+      "name": "Microsoft",
+      "keywords": ["microsoft", "マイクロソフト"],
+      "officialDomains": ["microsoft.com", "live.com", "microsoftonline.com"],
+      "evidence": "login.live.com、login.microsoftonline.com（OAuth 認可エンドポイント）、account.microsoft.com が応答することを確認"
+    },
+    {
+      "id": "netflix",
+      "name": "Netflix",
+      "keywords": ["netflix", "ネットフリックス"],
+      "officialDomains": ["netflix.com"],
+      "evidence": "www.netflix.com/login がログインページを返すことを確認"
+    }
+  ]
+}
