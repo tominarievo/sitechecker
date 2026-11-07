@@ -1,13 +1,13 @@
 # 詐欺サイトチェッカー（Chrome / Edge 拡張機能・Manifest V3）
 
-閲覧中のURL・ドメイン・ページ内容を解析し、悪質ECサイト・詐欺サイトの危険度（0〜100%）を判定します。
+閲覧中のURL・ドメイン・ページ内容からリスク要因を検出し、リスクスコア（0〜100点）と判定の根拠を表示します。スコアはルールによる加点の目安で、詐欺である確率ではありません。
 外部ライブラリ不使用・ビルド不要です。
 
 ## ファイル構成
 
 | ファイル | 役割 |
 |---|---|
-| `manifest.json` | Manifest V3 設定（権限: `tabs`, `storage`、コンテンツスクリプト: http/https の全ページ） |
+| `manifest.json` | Manifest V3 設定（権限: `tabs`, `storage`, `alarms`、配信用 GitHub Pages のみ host permission、コンテンツスクリプト: http/https の全ページ） |
 | `detector.js` | URL・ドメインの判定ロジック本体 |
 | `rdap.js` | RDAP によるドメイン登録日の照会 |
 | `page-analyzer.js` | ページ本文の解析ロジック |
@@ -15,7 +15,9 @@
 | `phishing-dom.js` / `phishing-analyzer.js` | フィッシングの追加チェック（入力フォームの抽出と採点。初期設定オフ） |
 | `psl.js` / `data/public_suffix_list.dat` | Public Suffix List による登録ドメインの判定 |
 | `data/brands.json` | ブランドと公式ドメインの対応表（根拠つき） |
-| `background.js` | Service Worker。判定の集約、バッジ更新、RDAP キャッシュ |
+| `background.js` | Service Worker。判定の集約、バッジ更新、ブラックリスト・RDAP キャッシュ |
+| `blocklist-data.js` | 動的ブラックリストの形式・ドメイン一覧の検証 |
+| `.github/workflows/update-blocklist.yml` | 毎日のブラックリスト取得・GitHub Pages 公開 |
 | `popup.html` / `popup.js` | ポップアップUI（現在のタブ・手動チェック・設定） |
 | `data/blocklist.txt` | 同梱ブラックリスト（既知の偽ショップ・詐欺ドメイン） |
 | `tools/update-blocklist.js` | 同梱ブラックリストの更新スクリプト |
@@ -44,13 +46,13 @@
 
 コードを編集した後は、拡張機能一覧画面で本拡張の **再読み込み（↻）** ボタンを押すと反映されます。
 
-## 判定ルール（加点方式・0〜100%）
+## 判定ルール（加点方式・0〜100点）
 
 ### URL・ドメイン（detector.js）
 
 | 区分 | 内容 | 点数 |
 |---|---|---|
-| ブラックリスト | 同梱リスト（HaGeZi Fake、約1.7万件）に登録済み | +100 |
+| ブラックリスト | 同梱リスト（HaGeZi Fake、約1.9万件）に登録済み | +100 |
 | 危険TLD | `.rest` `.ltd` `.icu` `.cfd` `.sbs` `.bond` `.cyou` `.xyz` `.top` など | +35〜40 |
 | 格安TLD | `.site` `.shop` `.club` `.work` `.online` `.store` `.vip` など | +15〜30 |
 | 擬似ドメイン | `.jp.net` `.jpn.com`、ドメイン途中の `.jp.` / `.co.jp.` | +45 |
@@ -111,7 +113,7 @@ IANA の一覧（ブートストラップ）で TLD ごとの RDAP サーバー�
 
 - 1 と 2 は同じ「ドメイン」の根拠として、高い方だけを数えます。
 - **異なる種類の根拠が2つ以上**そろい、合計 **40点以上で「注意」、80点以上で「危険」**。8（HTTP への送信）だけは単独でも「注意」にします。
-- 偽通販判定（%）とは別に「点」で表示し、足し合わせません。バッジには強い方の警告を出し、ポップアップにどちらのチェックによる警告かを表示します。
+- 偽通販チェックのリスクスコアとは別に「点」で表示し、足し合わせません。バッジには強い方の警告を出し、ポップアップにどちらのチェックによる警告かを表示します。
 - 登録ドメインの判定には Public Suffix List を使い、公式ドメインとの比較は登録ドメインの完全一致で行います（`amazon.co.jp.evil.example` は公式とみなしません）。
 - 表示中の入力欄だけを数え、`<template>` 内や非表示の欄は除外します。送信先は `form` の `action` と送信ボタンの `formaction` を `<base>` を考慮して解決します。**JavaScript で別の送信先に送るページの実際の送信先は、この静的な解析では確認できません。**
 - メール・SMS・QR コードなど、ページに至る前の情報は扱いません。
@@ -119,11 +121,11 @@ IANA の一覧（ブートストラップ）で TLD ごとの RDAP サーバー�
 
 ### 判定
 
-- **80%以上**: 赤バッジ「危険」
-- **40〜79%**: 橙バッジ「注意」
-- **40%未満**: バッジ非表示
+- **80点以上**: 赤バッジ「危険」
+- **40〜79点**: 橙バッジ「注意」
+- **40点未満**: バッジ非表示
 
-**ホワイトリスト**（常に0%）: `amazon.co.jp` `rakuten.co.jp` `yahoo.co.jp` などの大手モールと、`.go.jp` `.ac.jp` `.lg.jp`。
+**判定除外リスト**（偽通販チェックは0点で「判定除外」と表示）: `amazon.co.jp` `rakuten.co.jp` `yahoo.co.jp` などの大手モールと、`.go.jp` `.ac.jp` `.lg.jp`。ドメイン単位の除外であり、個々のページや出品者の安全性を保証しません。フィッシングの追加チェックを有効にした場合は、その結果を別途表示します。
 
 ルールの追加・調整は `detector.js` / `page-analyzer.js` 冒頭の定数を編集してください。
 
@@ -131,10 +133,13 @@ IANA の一覧（ブートストラップ）で TLD ごとの RDAP サーバー�
 
 | 通信先 | 内容 | 条件 |
 |---|---|---|
+| `tominarievo.github.io` | HaGeZi Fake ブラックリスト（約1.9万ドメイン） | 起動時および1日ごと。変更がなくても更新確認します |
 | `data.iana.org` | TLD ごとの RDAP サーバー一覧（1日1回） | RDAP 設定がオン |
 | 各TLDのレジストリの RDAP サーバー | 閲覧中サイトの登録ドメイン名 | RDAP 設定がオン、未キャッシュ時のみ |
 
-上記以外への通信はありません（ブラックリストは同梱ファイルを参照します）。
+ブラックリスト取得要求に閲覧中URLやページ内容は含めません。配信元の GitHub Pages には、通常の HTTPS 接続情報（IP アドレスや User-Agent 等）が伝わる場合があります。閲覧先の判定は引き続き端末内で行い、更新取得に失敗した場合は最後に検証できたデータ、なければ同梱リストを使います。
+
+タブごとのURL（パス・クエリを含む）と判定結果を端末内に一時保存し、タブを閉じたとき、またはブラウザ終了時に削除します。判定根拠には店名・運営者名・口座名義などの短い抜粋が含まれる場合があります。ページ本文全体や利用者の入力値は保存しません。手動入力URLの履歴は保存しませんが、RDAP有効時には登録ドメイン名を照会・キャッシュします。詳細は `docs/privacy.html` を参照してください。
 
 ## Public Suffix List の更新
 
@@ -148,9 +153,48 @@ node tools/update-psl.js
 node tools/update-blocklist.js
 ```
 
-HaGeZi のリストをダウンロードして `data/blocklist.txt` を作り直します（リスト内のサイトにはアクセスしません）。更新後、拡張機能を再読み込みしてください。
+HaGeZi のリストを取得して、同梱用 `data/blocklist.txt` と GitHub Pages 配信用 `docs/feed/blocklist.json` を作ります（リスト内のサイトにはアクセスしません）。GitHub Actions は毎日 10:17 JST に取得・検証し、変更をコミットします。拡張機能は起動時と1日ごとに配信フィードを検証して端末内へ保存し、失敗時は最後に検証できたリストまたは同梱リストを使います。閲覧先URLをフィード配信元へ送ることはありませんが、HTTPS 要求の接続情報は GitHub Pages に伝わる場合があります。手動実行は GitHub の Actions から `Update dynamic blocklist` を実行してください。
 
 出典: [HaGeZi DNS Blocklists](https://github.com/hagezi/dns-blocklists)（Fake）— ライセンス GPL-3.0。拡張機能をストアで配布する場合は、GPL-3.0 の条件（ライセンス表示・ソースの提供）に従ってください。
+JPCERT/CC・CCJ・消費者庁のデータは、再配布条件の確認が済むまでこの動的フィードに含めません。
+
+## 公表情報を含むデータベースの生成（1.3.0）
+
+HaGeZi Fake、JPCERT/CC `phishurl-list`、国民生活センター CCJの悪質通販サイト一覧、指定した消費者庁の注意喚起をまとめて取得します。掲載された危険サイトにはアクセスせず、接続失敗による削除もしません。
+
+```sh
+# Node.js 22.16以降、Python、pypdfが必要
+python -m pip install -r tools/requirements-data.txt
+node tools/update-intelligence.js
+# 全情報源の取得済みキャッシュで再生成する場合
+node tools/update-intelligence.js --offline
+```
+
+- 管理用: `dist/intelligence/intelligence.sqlite`。URL・照合キー・出典・確認／公表日・取得日・初回／最終取り込み日・閉鎖記載・掲載状態を保存します。上流から消えた掲載は履歴に残し、照合対象から外します。URL誤記などは `rejected_records` に隔離し、推測で補正しません。確認日空欄はそのまま保持します。
+- 配布用: `data/blocklist.txt`、`data/threat-catalog.json`、`data/threat-shards/*.json`。公表履歴はホストごとに256分割し、閲覧先に必要な部分だけ端末内で読み込みます（最大8分割をキャッシュ）。全件JSONは管理用の `dist/intelligence/threat-history.json` に保存します。
+- 更新結果: `dist/intelligence/report.json`。件数・最新確認日・欠損日付・閉鎖記載・隔離件数・サイズ・ハッシュを記録します。JPCERTのCSVは公開Git SHAも照合し、変更のないCSVは再ダウンロードしません。
+- 公表履歴は初期設定から照合します。JPCERTはURL全体（パス・クエリ・フラグメントを保持）の一致、CCJ・消費者庁は掲載ホスト名の一致です。親・子・兄弟のホストに自動拡張しません。履歴一致は40点を加算し、減点があっても40点未満にはしません。現在の稼働・詐欺継続は断定せず、出典・日付・区分とともに表示します。
+- CCJのPDFは国民生活センターの一覧ページから毎回特定します。PDFの総件数と抽出件数が一致しない場合は更新を中止します。消費者庁は `tools/intelligence-sources.json` の `caaNotices` に登録された公表ページが対象です。現在は2026年8月4日の注意喚起に対応しています。新しい発表は対象表と抽出結果を確認して追加してください。正規サイトや参照先のURLを誤って登録しないため、PDF内の全リンクを自動採用することはしません。
+- 通信・解析に失敗した回は既存データを維持します。キャッシュの `.bin` はCSV・PDF等の取得内容で、実行しません。削除・隔離されているJPCERTのCSVは、自動復元せず取り込みから除外し、`report.json` の `excludedCsvs` に記録します。そのCSVだけに由来する掲載は照合対象から外します（SQLiteの過去履歴は残します）。HaGeZi・CCJ・消費者庁の取得キャッシュが読めない場合、またはJPCERTの全CSVが除外された場合は更新を中止します。ウイルス対策の除外設定は不要です。
+
+毎日10:00に開発PC上で生成するタスクを登録する場合:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/register-data-task.ps1
+# 解除
+Unregister-ScheduledTask -TaskName 'SiteChecker データ更新' -Confirm:$false
+```
+
+ログは `dist/intelligence/logs/` に保存します。定期処理はデータ生成までです。拡張機能への反映は再読み込み、配布はバージョンを上げたZIP／ストア更新で行います。利用者のブラウザが外部からリストを自動取得する機能はありません。
+
+JPCERTデータの明示的な再配布・商用利用ライセンスは確認できていません。取り込み・開発用ZIPには含めていますが、公開配布前には利用条件の確認が必要です。CCJ・消費者庁の情報も各公表元の条件と個別資料の注意事項を確認してください。公表元の画像・資料本文は拡張機能に同梱しません。
+
+取り込み・照合のオフライン検証:
+
+```sh
+node --test tests/threat-data.test.js tests/intelligence-update.test.js
+python tests/official-extraction.test.py
+```
 
 ## テスト
 

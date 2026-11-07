@@ -12,12 +12,25 @@ $manifest = Get-Content (Join-Path $Root 'manifest.json') -Raw -Encoding UTF8 | 
 $version = $manifest.version
 
 $files = @(
-  'manifest.json', 'background.js', 'detector.js', 'rdap.js', 'page-analyzer.js', 'content.js',
-  'psl.js', 'phishing-analyzer.js', 'phishing-dom.js',
-  'popup.html', 'popup.js', 'data/blocklist.txt', 'data/public_suffix_list.dat', 'data/brands.json',
+  'manifest.json', 'background.js', 'blocklist-data.js', 'detector.js', 'rdap.js', 'page-analyzer.js', 'content.js',
+  'psl.js', 'phishing-analyzer.js', 'phishing-dom.js', 'threat-data.js',
+  'popup.html', 'popup.js', 'data/blocklist.txt', 'data/public_suffix_list.dat', 'data/brands.json', 'data/threat-catalog.json',
   'LICENSE', 'THIRD_PARTY_NOTICES.md',
   'icons/icon16.png', 'icons/icon32.png', 'icons/icon48.png', 'icons/icon128.png'
 )
+
+$catalog = Get-Content (Join-Path $Root 'data/threat-catalog.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+foreach ($shard in $catalog.shards.PSObject.Properties) {
+  if ($shard.Name -notmatch '^[a-f0-9]{2}$') { throw '分割データのキーが不正です' }
+  $f = 'data/threat-shards/' + $shard.Name + '.json'
+  $sourcePath = Join-Path $Root $f
+  if (-not (Test-Path -LiteralPath $sourcePath)) { throw "分割データがありません: $f" }
+  if ((Get-Item -LiteralPath $sourcePath).Length -ne $shard.Value.bytes -or
+      (Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash.ToLower() -ne $shard.Value.sha256) {
+    throw "分割データのハッシュが一致しません: $f"
+  }
+  $files += $f
+}
 
 # manifest.json から参照されているファイルが揃っているか確認
 $referenced = @($manifest.background.service_worker, $manifest.action.default_popup) +

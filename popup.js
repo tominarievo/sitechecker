@@ -5,12 +5,13 @@
   'use strict';
 
   const LEVEL_TEXT = {
-    danger: { label: '危険', verdict: '⚠ 詐欺サイトの可能性が高いです。個人情報や支払い情報を入力しないでください。' },
+    danger: { label: '危険', verdict: '⚠ 強いリスク要因が検出されました。個人情報や支払い情報を入力しないでください。' },
     caution: { label: '注意', verdict: '⚠ 不審な要素があります。運営者情報や口コミを確認してください。' },
     minor: { label: '低リスク', verdict: '軽微なリスク要因があります。念のため運営者情報を確認してください。' },
     safe: { label: '低リスク', verdict: '✓ 目立ったリスク要因は検出されませんでした。' },
-    whitelist: { label: '安全', verdict: '✓ 信頼済みドメインです。' },
+    whitelist: { label: '判定除外', verdict: 'このドメインは偽通販チェックの判定除外リストに含まれています。安全性を保証するものではありません。' },
     blocklist: { label: '危険', verdict: '⛔ 既知の詐欺・偽ショップリストに登録されているサイトです。利用しないでください。' },
+    history: { label: '注意', verdict: '⚠ 過去のフィッシング・悪質通販の公表情報に一致しました。現在の状態は未確認です。出典を確認し、個人情報や支払い情報の入力を控えてください。' },
   };
 
   const RDAP_TEXT = {
@@ -57,8 +58,8 @@
       return;
     }
 
-    let key = result.whitelisted ? 'whitelist' : result.blocklisted ? 'blocklist' : result.level;
-    if (key === 'safe' && result.reasons.length) key = 'minor';
+    let key = result.blocklisted ? 'blocklist' : result.knownThreats?.length ? 'history' : result.whitelisted ? 'whitelist' : result.level;
+    if (key === 'safe' && result.reasons.some((reason) => reason.points > 0)) key = 'minor';
     const text = LEVEL_TEXT[key];
 
     const card = el('div', 'card result');
@@ -68,8 +69,9 @@
     const head = el('div', 'head');
     const score = el('div', 'score');
     const num = el('div', 'num', String(result.score));
-    num.appendChild(el('small', null, '%'));
-    score.append(num, el('div', 'lbl', text.label));
+    num.appendChild(el('small', null, '点'));
+    score.append(el('div', 'lbl', 'リスクスコア'), num,
+      el('div', 'lbl', key === 'history' && result.level === 'danger' ? '危険' : text.label));
 
     const meta = el('div', 'meta');
     meta.append(
@@ -81,10 +83,33 @@
     } else if (RDAP_TEXT[result.rdapStatus]) {
       meta.appendChild(el('div', 'age', `ドメイン登録日: ${RDAP_TEXT[result.rdapStatus]}`));
     }
+    if (result.blocklistDataDate) {
+      const source = result.blocklistDataSource === 'dynamic' ? '自動更新' : '同梱データ';
+      meta.appendChild(el('div', 'age', `ブラックリスト: ${source}（${formatDate(result.blocklistDataDate)}）`));
+    }
     head.append(score, meta);
     card.appendChild(head);
 
     card.appendChild(el('div', 'verdict', text.verdict));
+
+    if (result.threatDataStatus === 'unavailable') {
+      card.appendChild(el('div', 'age', '公表履歴データを読み込めませんでした。この照合は実施できていません。'));
+    } else if (result.threatDataDate) {
+      card.appendChild(el('div', 'age', `公表履歴データ作成日: ${formatDate(result.threatDataDate)}`));
+    }
+    if (result.knownThreats?.length) {
+      const sources = el('ul', 'reasons');
+      for (const match of result.knownThreats) {
+        const item = el('li');
+        const link = el('a', 'detail', `${match.source.name} — ${match.date || '確認日不明'} — ${match.description || 'フィッシング'}`);
+        // 公表元のURLだけを開く。対象サイトのリンクは生成しない。
+        const sourceUrl = new URL(match.source.url);
+        if (sourceUrl.protocol !== 'https:') continue;
+        link.href = sourceUrl.href; link.target = '_blank'; link.rel = 'noopener noreferrer';
+        item.appendChild(link); sources.appendChild(item);
+      }
+      card.appendChild(sources);
+    }
 
     // 判定根拠
     if (result.reasons.length) {
@@ -109,7 +134,7 @@
 
   const PHISHING_LEVEL = { danger: '危険', caution: '注意', none: '警告なし' };
 
-  /** フィッシングの追加チェック（有効な場合のみ）。偽通販判定（%）とは別に「点」で表示する */
+  /** フィッシングの追加チェック（有効な場合のみ）。偽通販チェックとは別のスコアとして表示する */
   function renderPhishing(container, result, mainCard) {
     if (!result.phishingEnabled) return;
     if (result.badgeSource === 'phishing') {

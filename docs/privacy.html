@@ -27,17 +27,18 @@
 <body>
 <main>
   <h1>詐欺サイトチェッカー プライバシーポリシー</h1>
-  <p class="date">制定日: 2026年10月7日</p>
+  <p class="date">制定日: 2026年10月7日 / 改定日: 2026年11月7日</p>
 
-  <p>ブラウザ拡張機能「詐欺サイトチェッカー」（以下「本拡張機能」）は、閲覧中のWebサイトが悪質な通販サイト・詐欺サイトである可能性を判定するためのツールです。本拡張機能は、利用者の個人情報や閲覧履歴を収集・保存・販売しません。</p>
+  <p>ブラウザ拡張機能「詐欺サイトチェッカー」（以下「本拡張機能」）は、閲覧中のWebサイトのリスク要因を検出するためのツールです。閲覧URL・ページ内容は端末内で解析し、タブごとのURLと判定結果を端末内に一時保存します。URLやページ内容を開発者へ送信・販売しません。ブラックリストの定期取得ではGitHub Pagesへ接続するため、ホスティング事業者に通常の接続情報（IPアドレスやUser-Agent等）が伝わる場合があります。任意のRDAP機能を有効にした場合は、登録ドメイン名を第三者のレジストリに送信します。</p>
 
   <h2>1. 拡張機能内で扱う情報</h2>
+  <p>HaGeZiのリストと、JPCERT/CC・国民生活センターCCJ・消費者庁の公表情報を端末内で照合します。HaGeZiのリストは同梱データに加え、GitHub Pagesから起動時および1日ごとに取得します。照合のために閲覧URLをリストの出典へ送信することはありません。公表元のリンクを利用者が開いた場合は、通常のWeb閲覧としてそのサイトへ接続します。</p>
   <div class="table-wrap">
   <table>
     <tr><th>情報</th><th>用途</th><th>外部への送信</th></tr>
-    <tr><td>閲覧中のタブのURL</td><td>URL・ドメインの特徴から危険度を判定し、アイコンのバッジに表示するため</td><td>しません</td></tr>
-    <tr><td>閲覧中のページの本文・リンク</td><td>「特定商取引法に基づく表記」の有無などを判定するため。解析はブラウザ内で完結し、本文は保存しません</td><td>しません</td></tr>
-    <tr><td>手動チェック欄に入力したURL</td><td>入力されたURLの危険度を判定するため</td><td>しません（RDAP 有効時は登録ドメイン名のみ下記のとおり送信）</td></tr>
+    <tr><td>閲覧中のタブのURL</td><td>リスク要因の検出と、タブごとの判定結果の照合・バッジ表示のため。パスやクエリを含むURLを判定結果とともに一時保存します</td><td>RDAP 有効時に登録ドメイン名のみ送信します（下記参照）。ブラックリストの取得要求にはURLを含めません</td></tr>
+    <tr><td>閲覧中のページの本文・リンク</td><td>「特定商取引法に基づく表記」の有無などを端末内で判定するため。本文全体やリンク一覧は保存しませんが、判定根拠に含まれる短い抜粋（店名・運営者名・口座名義など）は一時保存する場合があります</td><td>しません</td></tr>
+    <tr><td>手動チェック欄に入力したURL</td><td>入力されたURLのリスク要因を検出するため。入力URLの履歴は保存しません</td><td>RDAP 有効時に登録ドメイン名のみ送信します（下記参照）</td></tr>
   </table>
   </div>
 
@@ -46,36 +47,38 @@
   <ul>
     <li>解析はブラウザ内で完結し、外部への通信は一切行いません（この機能のために、外部のサーバーやAPIに問い合わせることはありません）。</li>
     <li>利用者が入力した内容（パスワード、カード番号、ワンタイムパスワード等）は読み取りません。</li>
-    <li>保存するのは判定の根拠（該当したチェックの種類、関係するドメイン名、点数）だけで、ページの本文や入力値は保存しません。</li>
+    <li>ページURLと判定結果（該当したチェックの種類、関係するドメイン名、点数）を端末内に一時保存します。フォーム周辺の本文や利用者の入力値は保存しません。</li>
     <li>無効にすると、保存済みの判定結果を削除します。</li>
   </ul>
 
-  <h2>3. 外部への通信（ドメイン登録日の確認・初期設定はオフ）</h2>
-  <p>ポップアップの設定で「ドメイン登録日を確認する（RDAP）」を有効にした場合に限り、次の通信を行います。</p>
+  <h2>3. 外部への通信</h2>
+  <p>次の通信を行います。</p>
   <ul>
+    <li><strong>GitHub Pages（tominarievo.github.io）</strong>: HaGeZi Fakeブラックリストを拡張機能の起動時および1日ごとに取得します。閲覧URL・ページ内容は送信しませんが、ホスティング事業者にはIPアドレス、User-Agent等の通常の接続情報が伝わる場合があります。取得したデータは検証して端末内に保存し、通信に失敗した場合は最後に検証できたデータまたは同梱リストを使用します。</li>
     <li><strong>IANA（data.iana.org）</strong>: TLD（<code>.com</code> など）ごとの RDAP サーバーの一覧を取得します（1日1回程度）。閲覧中のサイトの情報は含みません。</li>
     <li><strong>各TLDのレジストリ（ドメイン登録管理機関）の RDAP サーバー</strong>: 閲覧中のサイトの<strong>登録ドメイン名のみ</strong>（例: <code>example.com</code>）を送信し、登録日を取得します。URLのパス、ページの内容、Cookie、利用者を識別する情報は送信しません。</li>
   </ul>
-  <p>この機能は初期設定では無効です。いつでも設定から無効にでき、無効にすると保存済みの照会結果もすべて削除します。</p>
+  <p>RDAP機能は初期設定では無効です。いつでも設定から無効にでき、無効にすると保存済みの照会結果もすべて削除します。</p>
 
   <h2>4. 端末内に保存する情報</h2>
   <ul>
-    <li>設定（RDAP の有効・無効）</li>
-    <li>RDAP の照会結果（ドメイン名と登録日）: 同じドメインへの再照会を減らすため、照会から最長7日間保存します（照会に失敗した場合は最長6時間）。期限を過ぎた記録は、ブラウザの起動時と拡張機能の動作時（1時間に1回まで）に自動で削除します。</li>
-    <li>RDAP サーバーの一覧（IANA から取得したもの）: 最長1日間保存し、期限を過ぎたものは上記と同様に削除します。</li>
-    <li>タブごとのページ解析結果（判定の根拠のみ。ページの本文は含みません）: タブを閉じたとき、またはブラウザを終了したときに消去されます。</li>
-    <li>フィッシングの追加チェックのタブごとの結果（判定の根拠と点数のみ。入力値やページの本文は含みません）: タブを閉じたとき、ブラウザを終了したとき、またはこの機能を無効にしたときに消去されます。</li>
+    <li>設定（RDAP とフィッシングの追加チェックの有効・無効）</li>
+    <li>ブラックリストの検証済みデータと更新確認時刻: 動的データは次の正常な更新まで端末内に保存します。取得できない場合も最後に検証できたデータを利用します。</li>
+    <li>RDAP の照会結果（ドメイン名、登録日、照会状態・エラー）: 正常な登録情報は7日間、未登録・登録日なし・非対応の結果は6時間、通信エラーは10分間キャッシュとして利用します。期限切れの記録は判定には使わず、ブラウザ起動時や拡張機能の起動・インストール時の削除処理で消去します。通常の拡張機能起動時の削除処理は1時間に1回までです。削除処理が動くまで端末内に残る場合があります。</li>
+    <li>RDAP サーバーの一覧（IANA から取得したもの）: 1日間キャッシュとして利用し、期限切れの記録は上記の削除処理で消去します。RDAP を無効にすると、照会結果とサーバー一覧のキャッシュを削除します。</li>
+    <li>タブごとのページURLとページ解析結果（判定の根拠と、その根拠に含まれる短い抜粋）: タブを閉じたとき、またはブラウザを終了したときに消去されます。閲覧した全ページの一覧は作成しません。</li>
+    <li>フィッシングの追加チェックのタブごとのページURLと結果（判定の根拠・点数。入力値やフォーム周辺の本文は含みません）: タブを閉じたとき、ブラウザを終了したとき、またはこの機能を無効にしたときに消去されます。</li>
   </ul>
-  <p>これらはブラウザの拡張機能用ストレージにのみ保存され、開発者を含む第三者に送信されることはありません。本拡張機能をアンインストールすると削除されます。</p>
+  <p>これらの保存先は端末内のブラウザの拡張機能用ストレージです。閲覧URLやページ内容は開発者に送信しません。GitHub Pagesへのリスト取得要求には通常の接続情報が含まれる場合があり、RDAP有効時は登録ドメイン名をレジストリへ送信します。本拡張機能をアンインストールすると端末内の保存情報は削除されます。</p>
 
   <h2>5. 同梱データ</h2>
-  <p>既知の詐欺サイトとの照合には、拡張機能に同梱したリスト（HaGeZi DNS Blocklists、GPL-3.0）を使用します。フィッシングの追加チェックでは、同梱した Public Suffix List（MPL-2.0）とブランドの公式ドメインの対応表を使用します。いずれも照合は端末内で行い、外部への問い合わせは行いません。</p>
+  <p>既知の詐欺サイトとの照合には、同梱またはGitHub Pagesから取得したHaGeZi DNS Blocklists（GPL-3.0）を使用します。照合は端末内で行い、閲覧URLを送信しません。フィッシングの追加チェックでは、同梱した Public Suffix List（MPL-2.0）とブランドの公式ドメインの対応表を使用します。</p>
 
   <h2>6. 第三者への提供・広告</h2>
-  <p>本拡張機能は、利用者の情報を第三者に提供・販売しません。広告の表示や、利用状況の分析（アクセス解析）も行いません。</p>
+  <p>本拡張機能は、利用者の情報を販売しません。GitHub Pagesへのブラックリスト取得要求と、RDAP有効時の登録ドメイン名照会を行います。広告の表示や、利用状況の分析（アクセス解析）は行いません。</p>
 
   <h2>7. 判定結果について</h2>
-  <p>判定は自動的な推定であり、正確性を保証するものではありません。正規のサイトを危険と判定したり、詐欺サイトを見逃したりする場合があります。</p>
+  <p>リスクスコア（0〜100点）は検出した要因を加点した目安で、詐欺である確率ではありません。低い点数や判定除外も安全性を保証しません。正規のサイトを危険と判定したり、詐欺サイトを見逃したりする場合があります。</p>
 
   <h2>8. お問い合わせ・改定</h2>
   <p>本ポリシーに関するお問い合わせは、<a href="https://github.com/tominarievo/sitechecker/issues">GitHub の Issues</a> からお願いします。本ポリシーを改定する場合は、このページで公表します。</p>
@@ -84,29 +87,33 @@
 
   <h1 lang="en">Privacy Policy — Scam Site Checker</h1>
   <div lang="en">
-  <p class="date">Effective: October 7, 2026</p>
-  <p>The "Scam Site Checker" browser extension estimates whether the website you are viewing may be a fraudulent online shop or scam site. It does not collect, store, sell, or share your personal information or browsing history.</p>
+  <p class="date">Effective: October 7, 2026 / Updated: November 7, 2026</p>
+  <p>The "Scam Site Checker" browser extension detects risk factors in websites. It analyzes browsing URLs and page content locally and temporarily stores per-tab URLs and analysis results on your device. It does not send browsing URLs or page content to the developer or sell data. It periodically downloads its blocklist from GitHub Pages; the hosting provider may receive ordinary connection data such as your IP address and User-Agent. Only when you enable the optional RDAP feature does it send registrable domain names to third-party registries.</p>
   <h2>Data handled locally</h2>
+  <p>Bundled HaGeZi lists and public records from JPCERT/CC, NCAC CCJ, and the Consumer Affairs Agency are matched locally. The HaGeZi list is also downloaded from GitHub Pages at startup and once per day. Browsing URLs are not sent to the list source for matching. Opening a source link connects to that source website as a normal web visit.</p>
   <ul>
-    <li><strong>URL of the active tab</strong> — analyzed locally to calculate a risk score shown on the toolbar badge. Not transmitted.</li>
-    <li><strong>Page text and links</strong> — analyzed locally (e.g., to check for a legally required seller disclosure). Not stored and not transmitted.</li>
-    <li><strong>URLs entered in the manual check form</strong> — analyzed locally. Not transmitted (except the registrable domain when RDAP is enabled, see below).</li>
+    <li><strong>Per-tab URLs</strong> — analyzed locally to calculate risk scores and show warning badges. URLs, including paths and queries, are temporarily stored with the analysis results. Only registrable domain names are transmitted when RDAP is enabled.</li>
+    <li><strong>Page text and links</strong> — analyzed locally (e.g., to check for seller disclosures). Full page text and link lists are not stored, but short excerpts in risk factors, such as shop names, operator names and bank account holder names, may be temporarily stored. Page content is not transmitted.</li>
+    <li><strong>URLs entered in the manual check form</strong> — analyzed locally without storing an input history. Only registrable domain names are transmitted when RDAP is enabled.</li>
   </ul>
   <h2>Additional phishing check (off by default)</h2>
-  <p>Only if you enable "additional phishing check" in the popup settings, the extension inspects the forms on the page you are viewing: the kinds of input fields (password, card number, etc.), where the form submits, and the surrounding visible text. The analysis runs entirely in your browser and makes no network requests. The extension never reads what you type (passwords, card numbers, one-time codes). Only the detected risk factors (check type, related domain names, points) are kept, and they are deleted when you disable the feature.</p>
-  <h2>Network requests (domain age check, off by default)</h2>
-  <p>This feature is off by default. Only if you enable "Check domain registration date (RDAP)" in the popup settings, the extension fetches the RDAP server list from IANA (data.iana.org) and sends <strong>only the registrable domain name</strong> (e.g., <code>example.com</code>) to the RDAP server of the registry that manages that top-level domain. No paths, page content, cookies, or identifiers are sent.</p>
+  <p>Only if you enable "additional phishing check" in the popup settings, the extension inspects the forms on the page you are viewing: the kinds of input fields (password, card number, etc.), where the form submits, and the surrounding visible text. This feature makes no network requests and never reads what you type. The page URL and analysis results (risk factors, related domain names and points) are temporarily stored locally; surrounding form text and input values are not stored. Disabling the feature deletes its stored results.</p>
+  <h2>Network requests</h2>
+  <p>The extension downloads the HaGeZi Fake blocklist from GitHub Pages at startup and once per day. This request does not include browsing URLs or page content, but the host may receive ordinary connection data such as your IP address and User-Agent. If you enable "Check domain registration date (RDAP)", the extension also fetches the RDAP server list from IANA and sends <strong>only the registrable domain name</strong> (e.g., <code>example.com</code>) to the relevant registry's RDAP server. No paths or page content are sent.</p>
   <h2>Local storage</h2>
   <ul>
-    <li><strong>Settings</strong> (whether RDAP is enabled).</li>
-    <li><strong>Cached RDAP results</strong> (domain name and registration date): kept for up to 7 days after the lookup (up to 6 hours for failed lookups) to avoid repeated queries. Expired records are deleted automatically when the browser starts and while the extension is running (at most once per hour). Disabling RDAP deletes all cached results.</li>
-    <li><strong>RDAP server list</strong> obtained from IANA: kept for up to 1 day and deleted the same way when expired.</li>
-    <li><strong>Per-tab analysis results</strong> (detected risk factors only, never the page text): cleared when the tab is closed or the browser exits.</li>
-    <li><strong>Per-tab phishing check results</strong> (risk factors and points only, never input values or page text): cleared when the tab is closed, the browser exits, or the feature is disabled.</li>
+    <li><strong>Settings</strong> (whether RDAP and the additional phishing check are enabled).</li>
+    <li><strong>Validated blocklist and last-check time</strong>: cached locally and used until a newer valid version is downloaded. On network failure, the last valid list or bundled list is retained.</li>
+    <li><strong>Cached RDAP results</strong> (domain name, registration date, status and errors): used for 7 days for successful lookups, 6 hours for unsupported, missing or undated registrations, and 10 minutes for communication errors. Expired results are not used. Cleanup runs on browser startup, installation and extension startup; ordinary extension-startup cleanup runs at most once per hour. Records may remain locally until cleanup runs.</li>
+    <li><strong>RDAP server list</strong> obtained from IANA: used for 1 day, with expired records removed by the same cleanup process. Disabling RDAP deletes both result and server-list caches.</li>
+    <li><strong>Per-tab URLs and page analysis results</strong> (risk factors and short excerpts within those factors): cleared when the tab is closed or the browser exits. No list of all visited pages is created.</li>
+    <li><strong>Per-tab URLs and phishing check results</strong> (risk factors and points, never input values or surrounding form text): cleared when the tab is closed, the browser exits, or the feature is disabled.</li>
   </ul>
-  <p>All of the above is stored only in the browser's extension storage, is never sent to the developer or third parties, and is removed when the extension is uninstalled.</p>
-  <h2>No sharing, no ads, no analytics</h2>
-  <p>The extension does not sell or share data with third parties, show ads, or use analytics.</p>
+  <p>This information is stored in your browser's local extension storage and is removed when the extension is uninstalled. Browsing URLs and page content are not sent to the developer. GitHub Pages receives the blocklist request and may receive ordinary connection data; registrable domain names are sent to registries only when RDAP is enabled.</p>
+  <h2>Third-party transmission, ads and analytics</h2>
+  <p>The extension does not sell data, show ads or use analytics. It requests the blocklist from GitHub Pages and performs domain lookups only when you enable RDAP.</p>
+  <h2>Risk scores</h2>
+  <p>The 0–100 risk score is a rule-based indicator, not a probability of fraud. Low scores and exclusions do not guarantee safety. False warnings and missed threats are possible.</p>
   <h2>Contact</h2>
   <p>Please contact us via <a href="https://github.com/tominarievo/sitechecker/issues">GitHub Issues</a>.</p>
   </div>

@@ -141,22 +141,76 @@ async function evalInWorker(worker, expression) {
           .filter((t) => /(fake|legit)-shop\\.html$/.test(t.url || ''))
           .map(async (t) => {
             const r = await evaluate(t.url, t.id);
-            return { url: t.url, badge: await chrome.action.getBadgeText({ tabId: t.id }), score: r.score, level: r.level };
+            return { url: t.url, badge: await chrome.action.getBadgeText({ tabId: t.id }), title: await chrome.action.getTitle({ tabId: t.id }), score: r.score, level: r.level };
           })))`);
       const fake = rows.find((r) => r.url.includes('fake-shop'));
       const legit = rows.find((r) => r.url.includes('legit-shop'));
-      check(fake && fake.level === 'danger' && fake.badge === '危険', `偽通販の模擬ページ → 危険バッジ（${fake && fake.score}%, バッジ「${fake && fake.badge}」）`);
-      check(legit && legit.level === 'safe' && legit.badge === '', `正規通販の模擬ページ → バッジなし（${legit && legit.score}%）`);
+      check(fake && fake.level === 'danger' && fake.badge === '危険', `偽通販の模擬ページ → 危険バッジ（${fake && fake.score}点、バッジ「${fake && fake.badge}」）`);
+      check(fake && fake.title.includes(`リスクスコア ${fake.score}点`) && !fake.title.includes('%'), 'ツールバーの説明をリスクスコア・点で表示');
+      check(legit && legit.level === 'safe' && legit.badge === '', `正規通販の模擬ページ → バッジなし（${legit && legit.score}点）`);
+    });
+
+    await step('動的ブラックリスト', async () => {
+      const feed = fs.readFileSync(path.join(__dirname, '..', 'docs', 'feed', 'blocklist.json'), 'utf8');
+      const result = await evalInWorker(worker, `(async () => {
+        const originalFetch = self.fetch;
+        const body = ${JSON.stringify(feed)};
+        self.fetch = (input, options) => String(input) === BLOCKLIST_FEED_URL
+          ? Promise.resolve(new Response(body, { headers: { 'Content-Type': 'application/json' } }))
+          : originalFetch(input, options);
+        try {
+          await refreshDynamicBlocklist(true);
+          return { count: blocklistSet.size, source: blocklistInfo.source, generatedAt: blocklistInfo.generatedAt };
+        } finally { self.fetch = originalFetch; }
+      })()`);
+      const expected = JSON.parse(feed);
+      check(result && result.count === expected.count && result.source === 'dynamic' &&
+        result.generatedAt === expected.generatedAt, '配信フィードを検証・保存して、動的ブラックリストへ切り替える');
     });
 
     // ---- 2. 手動チェック（popup → background の 'analyze' と同じ経路） ----
     await step('手動チェック', async () => {
       const manual = await evalInWorker(worker, `
         Promise.all(['https://xqzvt.rest/index.php?main_page=product_info&zenid=abc', 'https://www.amazon.co.jp/']
-          .map((u) => evaluate(u).then((r) => ({ url: u, score: r.score, level: r.level, rdap: r.rdapStatus }))))`);
-      check(manual[0].level === 'danger', `手動チェック: 詐欺キットURL → 危険（${manual[0].score}%）`);
-      check(manual[1].score === 0, '手動チェック: amazon.co.jp → 0%');
+          .map((u) => evaluate(u).then((r) => ({ url: u, score: r.score, level: r.level, rdap: r.rdapStatus,
+            blocklistSource: r.blocklistDataSource, blocklistDate: r.blocklistDataDate }))))`);
+      check(manual[0].level === 'danger', `手動チェック: 詐欺キットURL → 危険（${manual[0].score}点）`);
+      check(manual[1].score === 0, '手動チェック: amazon.co.jp → 0点');
       check(manual[0].rdap === 'disabled', `RDAP は初期設定でオフ（${manual[0].rdap}）`);
+      check(['bundled', 'dynamic'].includes(manual[0].blocklistSource) && !!manual[0].blocklistDate,
+        'ブラックリストの適用元と更新日を判定結果に含める');
+    });
+
+    await step('公表履歴の照合', async () => {
+      const history = await evalInWorker(worker, `(async () => {
+        const catalog = await getThreatCatalog();
+        const sample = 'https://inuclo.com/wp-includes/assets/netflix/login.html';
+        const matched = await evaluate(sample);
+        const unrelated = await evaluate(new URL('/sitechecker-unrelated-fixture', sample).href);
+        const ccj = await evaluate('https://cpi.reduceee.ink/product');
+        const caa = await evaluate('https://fest.andster.rest/product');
+        return { total: catalog.recordCount, sample, status: matched.threatDataStatus,
+          count: matched.knownThreats.length, source: matched.knownThreats[0]?.source.name,
+          score: matched.score, unrelated: unrelated.knownThreats.length,
+          ccj: ccj.knownThreats.some((m) => m.source.id.startsWith('ccj:')),
+          caa: caa.knownThreats.some((m) => m.source.id.startsWith('caa:')) };
+      })()`);
+      check(history && history.total > 100000 && history.status === 'ok' && history.count > 0 &&
+        history.source.includes('JPCERT') && history.score >= 40, '同梱JPCERT URLを端末内で照合（対象サイトへのアクセスなし）');
+      check(history && history.unrelated === 0, '同じホストの別ページにはJPCERT履歴を適用しない');
+      check(history && history.ccj && history.caa, 'CCJ・消費者庁の掲載ホストを照合');
+    });
+
+    await step('公表履歴の破損時', async () => {
+      const unavailable = await evalInWorker(worker, `(async () => {
+        const originalFetch = self.fetch;
+        threatShardCache.clear();
+        self.fetch = (input, options) => String(input).includes('/threat-shards/')
+          ? Promise.resolve(new Response('{}')) : originalFetch(input, options);
+        try { return (await evaluate('https://cpi.reduceee.ink/product')).threatDataStatus; }
+        finally { self.fetch = originalFetch; threatShardCache.clear(); }
+      })()`);
+      check(unavailable === 'unavailable', '分割データの破損は照合不能として扱う');
     });
 
     // ---- 3. RDAP がブラウザ内（CORS 制約下）で動くか。照会先は IANA と .com のレジストリのみ ----
@@ -222,6 +276,77 @@ async function evalInWorker(worker, expression) {
       const popupTarget = (await getJson('/json/list')).find((t) => t.type === 'page' && t.url.endsWith('/popup.html'));
       const popup = cdp(popupTarget.webSocketDebuggerUrl);
       await popup.ready;
+      const display = await popup.send('Runtime.evaluate', {
+        expression: `(async () => {
+          document.getElementById('checkInput').value = 'https://www.amazon.co.jp/';
+          document.getElementById('checkForm').requestSubmit();
+          for (let i = 0; i < 30; i++) {
+            if (document.querySelector('#manualResult .score')) break;
+            await new Promise((r) => setTimeout(r, 100));
+          }
+          return {
+            unit: document.querySelector('#manualResult .num small')?.textContent,
+            text: document.getElementById('manualResult').innerText,
+            note: document.querySelector('.note').innerText,
+          };
+        })()`, awaitPromise: true, returnByValue: true,
+      });
+      const ui = display.result && display.result.result && display.result.result.value;
+      check(ui && ui.unit === '点' && ui.text.includes('リスクスコア') && ui.text.includes('判定除外') && !ui.text.includes('信頼済み') && ui.note.includes('詐欺である確率ではありません'),
+        'ポップアップ: 点数・判定除外・確率ではない旨を表示');
+      // RDAPの減点だけを「軽微なリスク」と表示しない。対象サイトは開かない。
+      await evalInWorker(worker, `(async () => {
+        self.__displayGetDomainInfo = getDomainInfo;
+        getDomainInfo = async () => ({ status: 'ok', registered: '1997-09-15T00:00:00Z' });
+        await chrome.storage.local.set({ settings: { rdap: true, phishing: false } });
+      })()`);
+      try {
+        const riskDisplay = await popup.send('Runtime.evaluate', {
+          expression: `(async () => {
+            const results = [];
+            for (const url of ['https://www.google.com/search?q=fixture', 'http://www.google.com/search?q=fixture']) {
+              document.getElementById('manualResult').replaceChildren();
+              document.getElementById('checkInput').value = url;
+              document.getElementById('checkForm').requestSubmit();
+              for (let i = 0; i < 50; i++) {
+                if (document.querySelector('#manualResult .score')) break;
+                await new Promise((r) => setTimeout(r, 100));
+              }
+              results.push({ score: document.querySelector('#manualResult .num')?.firstChild?.textContent,
+                verdict: document.querySelector('#manualResult .verdict')?.textContent,
+                reasons: document.querySelector('#manualResult .reasons')?.innerText });
+            }
+            return results;
+          })()`, awaitPromise: true, returnByValue: true,
+        });
+        const displays = riskDisplay.result?.result?.value;
+        check(displays?.[0]?.score === '0' && displays[0].verdict.includes('目立ったリスク要因は検出されませんでした') &&
+          displays[0].reasons.includes('-20'), '回帰: 減点だけのGoogle検索URLは0点・リスク要因なしと表示');
+        check(displays?.[1]?.score === '0' && displays[1].verdict.includes('軽微なリスク要因') &&
+          displays[1].reasons.includes('http'), '回帰: 減点で0点になっても実際の加点要因は表示');
+      } finally {
+        await evalInWorker(worker, `(async () => {
+          getDomainInfo = self.__displayGetDomainInfo;
+          await chrome.storage.local.set({ settings: { rdap: false, phishing: false } });
+        })()`);
+      }
+      const historyDisplay = await popup.send('Runtime.evaluate', {
+        expression: `(async () => {
+          document.getElementById('manualResult').replaceChildren();
+          document.getElementById('checkInput').value = 'https://cpi.reduceee.ink/product';
+          document.getElementById('checkForm').requestSubmit();
+          for (let i = 0; i < 50; i++) {
+            if (document.querySelector('#manualResult .score')) break;
+            await new Promise((r) => setTimeout(r, 100));
+          }
+          return { text: document.getElementById('manualResult').innerText,
+            links: [...document.querySelectorAll('#manualResult a')].map((a) => a.href) };
+        })()`, awaitPromise: true, returnByValue: true,
+      });
+      const historyUi = historyDisplay.result?.result?.value;
+      check(historyUi && historyUi.text.includes('現在の状態は未確認') && historyUi.text.includes('商品未着') &&
+        historyUi.links.some((href) => href.startsWith('https://www.kokusen.go.jp/')) &&
+        historyUi.links.every((href) => !href.includes('cpi.reduceee.ink')), 'ポップアップ: 公表履歴・区分・公表元リンクを表示');
       await popup.send('Runtime.evaluate', {
         expression: `chrome.runtime.sendMessage({ type: 'setSettings', settings: { rdap: false } })`, awaitPromise: true,
       });

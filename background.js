@@ -2,7 +2,7 @@
  * Service Worker：タブの切り替え・更新を監視し、ツールバーアイコンのバッジを更新する。
  * 判定に必要な情報（ブラックリスト・RDAP・ページ内容・フィッシングの追加チェック）をここで集約し、popup にも結果を返す。
  */
-importScripts('detector.js', 'rdap.js', 'psl.js', 'phishing-analyzer.js');
+importScripts('blocklist-data.js', 'threat-data.js', 'detector.js', 'rdap.js', 'psl.js', 'phishing-analyzer.js');
 
 const BADGE = {
   danger: { text: '危険', color: '#dc2626' },
@@ -16,17 +16,158 @@ const RDAP_TTL_OK = 7 * 86400000;      // 登録日が取れた結果は7日間�
 const RDAP_TTL_FAIL = 6 * 3600000;     // 失敗・非対応は6時間キャッシュ
 const RDAP_TTL_ERROR = 10 * 60000;     // 通信エラーは10分
 
-// ---- ブラックリスト（data/blocklist.txt を同梱） ------------------------------
+// ---- ブラックリスト（同梱データ + GitHub Pages 配信の検証済み更新） ----------
 
 let blocklistPromise = null;
+let blocklistRefreshPromise = null;
+let blocklistSet = new Set();
+let blocklistInfo = { generatedAt: null, source: 'bundled' };
+const BLOCKLIST_FEED_URL = 'https://tominarievo.github.io/sitechecker/feed/blocklist.json';
+const BLOCKLIST_REFRESH_INTERVAL = 24 * 60 * 60 * 1000;
+const BLOCKLIST_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+async function validateBlocklistFeed(data) {
+  return SiteRiskBlocklistData.verify(data);
+}
+
+async function readBlocklistResponse(response) {
+  const maxBytes = 5 * 1024 * 1024;
+  const declaredLength = Number(response.headers.get('content-length'));
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    throw new Error('動的ブラックリストのサイズが大きすぎます');
+  }
+  if (!response.body) throw new Error('動的ブラックリストの応答が空です');
+
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      throw new Error('動的ブラックリストのサイズが大きすぎます');
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return bytes;
+}
+
 function getBlocklist() {
   if (!blocklistPromise) {
-    blocklistPromise = fetch(chrome.runtime.getURL('data/blocklist.txt'))
-      .then((res) => res.text())
-      .then((text) => new Set(text.split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'))))
-      .catch(() => new Set());
+    blocklistPromise = (async () => {
+      const response = await fetch(chrome.runtime.getURL('data/blocklist.txt'));
+      if (!response.ok) throw new Error('同梱ブラックリストを読み込めません');
+      const text = await response.text();
+      const bundled = new Set(text.split('\n').map((line) => line.trim()).filter((line) => line && !line.startsWith('#')));
+      const date = text.match(/^# 更新日: (\d{4}-\d{2}-\d{2})/m)?.[1] || null;
+      blocklistSet = bundled;
+      blocklistInfo = { generatedAt: date, source: 'bundled' };
+
+      const { dynamicBlocklist } = await chrome.storage.local.get('dynamicBlocklist');
+      if (dynamicBlocklist) {
+        try {
+          const cached = await validateBlocklistFeed(dynamicBlocklist);
+          blocklistSet = new Set(cached.domains);
+          blocklistInfo = { generatedAt: cached.generatedAt, source: 'dynamic' };
+        } catch (error) {
+          console.error(error);
+          await chrome.storage.local.remove('dynamicBlocklist');
+        }
+      }
+      return blocklistSet;
+    })();
   }
   return blocklistPromise;
+}
+
+async function refreshDynamicBlocklist(force = false) {
+  if (blocklistRefreshPromise) return blocklistRefreshPromise;
+  blocklistRefreshPromise = (async () => {
+    await getBlocklist();
+    const now = Date.now();
+    const { blocklistLastCheckAt, dynamicBlocklist } =
+      await chrome.storage.local.get(['blocklistLastCheckAt', 'dynamicBlocklist']);
+    if (!force && Number.isFinite(blocklistLastCheckAt) &&
+        now - blocklistLastCheckAt < BLOCKLIST_REFRESH_INTERVAL) return false;
+
+    await chrome.storage.local.set({ blocklistLastCheckAt: now });
+    try {
+      const response = await fetch(BLOCKLIST_FEED_URL, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) throw new Error(`動的ブラックリストを取得できません（HTTP ${response.status}）`);
+      const bytes = await readBlocklistResponse(response);
+      const feed = await validateBlocklistFeed(JSON.parse(new TextDecoder().decode(bytes)));
+      const generatedAt = Date.parse(feed.generatedAt);
+      if (generatedAt > now + 5 * 60 * 1000 || now - generatedAt > BLOCKLIST_MAX_AGE) {
+        throw new Error('動的ブラックリストの生成日時が古いか、未来です');
+      }
+      if (dynamicBlocklist && Date.parse(dynamicBlocklist.generatedAt) > generatedAt) {
+        throw new Error('動的ブラックリストが以前の版に戻っています');
+      }
+
+      await chrome.storage.local.set({ dynamicBlocklist: feed });
+      blocklistSet = new Set(feed.domains);
+      blocklistInfo = { generatedAt: feed.generatedAt, source: 'dynamic' };
+      console.info(`動的ブラックリストを更新しました（${feed.count}件、${feed.generatedAt}）`);
+      await scanAllTabs();
+      return true;
+    } catch (error) {
+      console.warn('動的ブラックリストを更新できません。利用可能な保存済みデータを継続します。', error);
+      return false;
+    }
+  })().finally(() => { blocklistRefreshPromise = null; });
+  return blocklistRefreshPromise;
+}
+
+let threatCatalogPromise = null;
+const threatShardCache = new Map(); // 閲覧先に必要な部分だけを読み、最大8個に制限
+function getThreatCatalog() {
+  if (!threatCatalogPromise) {
+    threatCatalogPromise = fetch(chrome.runtime.getURL('data/threat-catalog.json'))
+      .then((res) => { if (!res.ok) throw new Error('公表履歴の読み込みに失敗'); return res.json(); })
+      .then((json) => {
+        if (json.schemaVersion !== 1 || json.bucketHash !== 'sha256-host-8bit' || !json.shards || !Array.isArray(json.sources)) {
+          throw new Error('公表履歴のカタログが不正');
+        }
+        return json;
+      }).catch((error) => { threatCatalogPromise = null; throw error; });
+  }
+  return threatCatalogPromise;
+}
+async function getThreatHistory(url) {
+  try {
+    const catalog = await getThreatCatalog();
+    const canonical = SiteRiskThreatData.canonicalUrl(url);
+    if (!canonical) return SiteRiskThreatData.parse({ ...catalog, records: [] });
+    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(new URL(canonical).hostname)));
+    const bucket = hash[0].toString(16).padStart(2, '0');
+    if (!catalog.shards[bucket]) return SiteRiskThreatData.parse({ ...catalog, records: [] });
+    if (!/^[a-f0-9]{2}$/.test(bucket) || !catalog.shards[bucket]) throw new Error('公表履歴の分割キーが不正');
+    if (!threatShardCache.has(bucket)) {
+      if (threatShardCache.size >= 8) threatShardCache.delete(threatShardCache.keys().next().value);
+      const promise = fetch(chrome.runtime.getURL(`data/threat-shards/${bucket}.json`))
+        .then(async (res) => {
+          if (!res.ok) throw new Error('公表履歴の分割データを読み込めません');
+          const bytes = await res.arrayBuffer();
+          const expected = catalog.shards[bucket];
+          const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))]
+            .map((n) => n.toString(16).padStart(2, '0')).join('');
+          if (bytes.byteLength !== expected.bytes || digest !== expected.sha256) throw new Error('公表履歴のハッシュが一致しません');
+          const json = JSON.parse(new TextDecoder().decode(bytes));
+          if (json.generatedAt !== catalog.generatedAt) throw new Error('公表履歴の生成日時が一致しません');
+          return SiteRiskThreatData.parse({ ...catalog, records: json.records });
+        }).catch((error) => { threatShardCache.delete(bucket); throw error; });
+      threatShardCache.set(bucket, promise);
+    }
+    return await threatShardCache.get(bucket);
+  } catch (error) { console.error(error); return null; }
 }
 
 // ---- フィッシングの追加チェック用のデータ（Public Suffix List・ブランド対応表を同梱） ----------
@@ -162,25 +303,28 @@ async function getPageSignals(tabId, url) {
 // 既存の判定（URL・ドメイン・ブラックリスト・RDAP・偽通販のページ内容）
 async function evaluateBase(url, tabId) {
   const first = SiteRiskDetector.analyze(url);
-  if (first.level === 'invalid' || first.level === 'unsupported' || first.whitelisted) {
+  if (first.level === 'invalid' || first.level === 'unsupported') {
     return { ...first, rdapStatus: 'skipped' };
   }
 
-  const [blocklist, settings, pageSignals] = await Promise.all([
-    getBlocklist(), getSettings(), getPageSignals(tabId, url),
+  const [blocklist, settings, pageSignals, threatHistory] = await Promise.all([
+    getBlocklist(), getSettings(), getPageSignals(tabId, url), getThreatHistory(url),
   ]);
+  void refreshDynamicBlocklist();
 
   let domainInfo = null;
   let rdapStatus = 'disabled';
-  if (settings.rdap && first.rdapEligible) {
+  if (settings.rdap && first.rdapEligible && !first.whitelisted) {
     domainInfo = await getDomainInfo(first.domain);
     rdapStatus = domainInfo.status;
   } else if (!first.rdapEligible) {
     rdapStatus = 'skipped';
   }
 
-  const result = SiteRiskDetector.analyze(url, { blocklist, domainInfo, pageSignals });
-  return { ...result, rdapStatus };
+  const result = SiteRiskDetector.analyze(url, { blocklist, domainInfo, pageSignals, threatHistory });
+  return { ...result, rdapStatus, blocklistDataDate: blocklistInfo.generatedAt,
+    blocklistDataSource: blocklistInfo.source, threatDataDate: threatHistory?.generatedAt || null,
+    threatDataStatus: threatHistory ? 'ok' : 'unavailable' };
 }
 
 const LEVEL_ORDER = { safe: 0, none: 0, caution: 1, danger: 2 };
@@ -294,7 +438,7 @@ async function updateBadge(tabId, url) {
     await chrome.action.setTitle({
       tabId,
       title: result.hostname
-        ? `詐欺サイトチェッカー: ${result.hostname}（偽通販判定 ${result.score}%${phishingNote}）`
+        ? `詐欺サイトチェッカー: ${result.hostname}（リスクスコア ${result.score}点${phishingNote}）`
         : '詐欺サイトチェッカー',
     });
   } catch (_) {
@@ -365,7 +509,16 @@ async function scanAllTabs() {
   const tabs = await chrome.tabs.query({});
   tabs.forEach((tab) => updateBadge(tab.id, tab.url));
 }
-chrome.runtime.onInstalled.addListener(() => { purgeExpiredRdap(true); scanAllTabs(); });
-chrome.runtime.onStartup.addListener(() => { purgeExpiredRdap(true); scanAllTabs(); });
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'blocklist-refresh') void refreshDynamicBlocklist(true);
+});
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.alarms.create('blocklist-refresh', { periodInMinutes: 1440 });
+  purgeExpiredRdap(true); scanAllTabs(); void refreshDynamicBlocklist(true);
+});
+chrome.runtime.onStartup.addListener(() => {
+  chrome.alarms.create('blocklist-refresh', { periodInMinutes: 1440 });
+  purgeExpiredRdap(true); scanAllTabs(); void refreshDynamicBlocklist(true);
+});
 // Service Worker が起動するたびに（1時間に1回まで）期限切れの照会結果を削除
 purgeExpiredRdap(false);

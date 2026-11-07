@@ -11,14 +11,14 @@
   const THRESHOLD_DANGER = 80;
   const THRESHOLD_CAUTION = 40;
 
-  // ホワイトリスト（このドメイン自身、またはそのサブドメインなら安全）
+  // 偽通販チェックの判定除外リスト（ドメイン自身とサブドメインが対象。安全性の保証ではない）
   const WHITELIST_DOMAINS = [
     'amazon.co.jp', 'amazon.com',
     'rakuten.co.jp', 'rakuten.com',
     'yahoo.co.jp', 'yahoo.com', 'yimg.jp',
     'mercari.com', 'paypay.ne.jp',
   ];
-  // ホワイトリスト（このサフィックスで終わるドメインは安全：公的機関・教育機関）
+  // 判定除外のサフィックス（公的機関・教育機関。安全性の保証ではない）
   const WHITELIST_SUFFIXES = ['.go.jp', '.ac.jp', '.lg.jp'];
 
   // 詐欺サイトで多用されるTLD（高リスク / 中リスク）
@@ -215,7 +215,7 @@
     ctx = ctx || {};
     const base = {
       input: String(input || ''), url: '', hostname: '', domain: '', tld: '',
-      score: 0, level: 'invalid', whitelisted: false, blocklisted: null,
+      score: 0, level: 'invalid', whitelisted: false, blocklisted: null, knownThreats: [],
       rdapEligible: false, domainAgeDays: null, registered: null, reasons: [],
     };
 
@@ -236,16 +236,26 @@
     const domain = isIpAddress(host) ? host : getRegistrableDomain(labels);
     Object.assign(base, { hostname: host, domain, tld });
 
+    // 確認済みの公表履歴は、偽通販の判定除外より優先する（正規サイトの改ざんにも対応）。
+    const knownThreats = global.SiteRiskThreatData?.lookup(ctx.threatHistory, url.href) || [];
+    base.knownThreats = knownThreats;
     // ホワイトリスト
-    if (isWhitelisted(host)) {
+    if (isWhitelisted(host) && !knownThreats.length) {
       base.whitelisted = true;
       base.level = 'safe';
-      base.reasons.push({ category: 'ホワイトリスト', detail: `${domain} は信頼済みドメインです`, points: 0 });
+      base.reasons.push({ category: '判定除外', detail: `${domain} は偽通販チェックの判定除外リストに含まれます（安全性の保証ではありません）`, points: 0 });
       return base;
     }
 
     const reasons = [];
     const add = (category, detail, points) => reasons.push({ category, detail, points });
+
+    if (knownThreats.length) {
+      const latest = knownThreats.reduce((a, b) => a.date > b.date ? a : b);
+      add('公表履歴', `${latest.source.name}: ${latest.description || 'フィッシング'}（${latest.date ? latest.date + '確認・公表' : '確認日不明'}）。` +
+        (latest.status === 'closed_by_source' ? '公表元ではサイト閉鎖と記載されています。' : '') +
+        '現在の稼働状況は本ツールでは確認していません', 40);
+    }
 
     // 0. 既知の詐欺サイトリスト
     const blocked = findInBlocklist(host, ctx.blocklist);
@@ -349,7 +359,7 @@
         const young = DOMAIN_AGE_RULES.find((r) => age < r.maxDays);
         const old = DOMAIN_AGE_OLD.find((r) => age >= r.minDays);
         if (young) add('ドメイン年齢', `${young.label}（${age}日前に登録）`, young.points);
-        else if (old && !blocked) add('ドメイン年齢', `${old.label}（減点）`, old.points);
+        else if (old && !blocked && !knownThreats.length) add('ドメイン年齢', `${old.label}（減点）`, old.points);
       }
     }
 
@@ -357,7 +367,7 @@
     (ctx.pageSignals || []).forEach((s) => add(s.category, s.detail, s.points));
 
     const total = reasons.reduce((sum, r) => sum + r.points, 0);
-    base.score = Math.max(0, Math.min(100, total));
+    base.score = Math.max(knownThreats.length ? THRESHOLD_CAUTION : 0, Math.min(100, total));
     base.level = levelOf(base.score);
     base.reasons = reasons;
     return base;
