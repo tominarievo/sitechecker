@@ -1,7 +1,7 @@
 # 詐欺サイトチェッカー 同梱ブラックリスト
 # 出典: HaGeZi DNS Blocklists - Fake (https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/fake-onlydomains.txt)
 # ライセンス: GPL-3.0 (https://github.com/hagezi/dns-blocklists/blob/main/LICENSE)
-# 更新日: 2026-11-10  件数: 18832
+# 更新日: 2026-11-11  件数: 18861
 01crypto.com
 0dgwn.bemobtrcks.com
 0el-preiswert-kaufen.de
@@ -1180,7 +1180,6 @@ autopflegesets.com
 autopraxen.com
 autoradiomaltimedia.com
 autoradiomitnavigation.de
-autoreifen-billig.com
 autorengemeinschaftaugsburg.de
 autorepairshopphoenixaz.com
 autorite-des-marches-financiers.com
@@ -1217,7 +1216,6 @@ autryschuhe.de
 auvikoshop.com
 auvoria.de
 auwaldo.shop
-av-shopping.shop
 availablek.com
 avamirae.com
 avantaxinvestgroup.com
@@ -1692,6 +1690,7 @@ berlinbeardeal.de
 berlincrown.com
 berliner-gartenservice.de
 berliner-laden.de
+berlinermode.shop
 berlinfog.com
 berlinget.com
 berlinglamour.de
@@ -3258,6 +3257,7 @@ componsite.com
 compostione.com
 compreimagazine.com
 comptntistur.com
+conceptandmarketing.com
 concepty.co
 condutbarn.com
 condyinbulk.shop
@@ -3470,6 +3470,7 @@ cryptosone.com
 cryptotrader.app
 cryptover.org
 cryptoweb3pro.com
+crystalli.de
 cryzor.com
 cs-pharmacy.net
 cs.myapoteka.com
@@ -3769,7 +3770,6 @@ dealswithjordan.com
 dealwiththefeels.org
 deangelnshop.com
 deaspierhireworks.works
-deautohentzschel.shop
 debasketball.com
 debot-maschinen.de
 decantersale.com
@@ -4042,6 +4042,7 @@ dfbworld.shop
 dfeoq.com
 dfr-hessen.de
 dg.tgvgxa.shop
+dgcex.net
 dgkktero.shop
 dhocco.shop
 dhrys.com
@@ -4167,6 +4168,7 @@ disciplinem.com
 disckangse.com
 discount-audio-equipment.com
 discount-baustoff.de
+discount-cigarettes-store.net
 discount-kobalt.com
 discount-lightingshop.com
 discount-megastore.com
@@ -4291,6 +4293,7 @@ dorat.de
 dorealis.com
 doriansaga.com
 dormanshop.com
+dormideo.shop
 dortmund-warenhaus.de
 dorvis.shop
 dosenkultde.com
@@ -4419,6 +4422,7 @@ dt5888.com
 dtabauto.de
 dtf-transferdruk.shop
 duale.com.au
+dualtron-scooters.com
 ducherower.de
 duckflix.de
 duckoid.com
@@ -5101,7 +5105,6 @@ euromedsonline.net
 eurometal-structure.com
 euronics-europa.de
 euronics-ps5.de.de
-euronics-sale.de
 euronicsdeutschlandshop.de
 euronicsserviceamazing.de
 euronicsshoponline.de
@@ -5137,6 +5140,7 @@ eusuperstores.com
 euvalentinogaravani.de
 euvendorshub.online
 euvitafarm.com
+ev-farm.com
 eva-zagreb.com
 evaluma.de
 evans-online.de
@@ -5453,6 +5457,7 @@ fbsmen.com
 fc-moto-vip.com
 fc-pflaumloch.de
 fcchu.com
+fdte2.xyz
 fedelixgroup.com
 feederme.com
 feederruten.com
@@ -5639,6 +5644,7 @@ finpari.com
 finprofm.com
 finrally.com
 finrocketpro.com
+fintechnews.live
 fintessxpert.com
 fintrexia.org
 finvestai.org
@@ -5758,6 +5764,7 @@ flipsterusdt.com
 fliptfeets.net
 flivourheaven.com
 flixway.de
+flixyshop.com
 flnanzonline-gvbmfgv.net
 flnanzonline.net
 flnanzonlinebmfgv.net
@@ -5884,6 +5891,7 @@ fortunaiteliastore.com
 fortunatecy.com
 fortunatelyt.com
 fortunaten.com
+fortunefx.io
 foryourwell.com
 fossilupra.com
 fosterrefrigerator.de
@@ -6050,6 +6058,7 @@ fuggler.at
 fuhrerschein-kaufenonline.com
 fuitrpt.com
 fullcarparts.com
+fullhousee.com
 fullsora.de
 fullzcash.com
 fullzcash.vip
@@ -6182,7 +6191,6 @@ gambystudios.com
 game.toys
 gamebyte.eu
 gamecentershop.de
-gamechangergift.net
 gamecityz.com
 gamecodeshop.de
 gamefarmgmbh.com
@@ -6276,7 +6284,6 @@ gartenfuchskreation.de
 gartenfuhrer.de
 gartenfurdu.de
 gartengenussde.com
-gartengeraete-shop.de
 gartengluecklich.de
 gartenguenter.de
 gartenhandel-poltermann.de
@@ -6727,6 +6734,7 @@ gmzglobal.net
 gnope.com
 go-campingmaster.com
 goadapter.com
+goalbo.de
 goalhat.com
 goalkertech.com
 goandfind.net
@@ -7358,6 +7366,7 @@ hechurupa.com
 hederich-co.de
 heepqy.com
 heidel-heizoel.de
+heidi-mode.de
 heike-store.com
 heikojentsch.de
 heilbronnmodehaus.de
@@ -7437,6 +7446,7 @@ heizline.at
 heizlogistik.de
 heizo24.de
 heizoel-24.com
+heizoel-austria.com
 heizoel-best.de
 heizoel-deutschland.com
 heizoel-easy.com
@@ -7445,6 +7455,7 @@ heizoel-fuchs24.de
 heizoel-genial.com
 heizoel-held.de
 heizoel-jetzt.de
+heizoel-kalkulator.de
 heizoel-lieferung.com
 heizoel-tankstelle.de
 heizoel24-aktuell.com
@@ -7993,6 +8004,7 @@ hunterbootsjapan.com
 hunterbootsnz.com
 hunterfinland.com
 huntergermany.de
+huntergumbootsaustralia.com
 huntergummistiefel.de
 huntergummistiefeloutlet.de
 huntergummistiefeloutlets.de
@@ -8692,6 +8704,7 @@ juice-bor.shop
 juicemouse.com
 juiceoclocz.shop
 juicycouturedeutschland.de
+julia-alea.de
 juliapostunternehmensberatung.de
 juliastil.de
 julielektronik.de
@@ -9873,7 +9886,6 @@ lichtvondeutschland.com
 lichtzauberaustria.com
 lidgg.de
 lidio.de
-lidl-de-de.vip
 lidleurope.com
 lidlhh.shop
 lidlpalace.com
@@ -10549,6 +10561,7 @@ marketct.com
 marketfy.de
 marketgiants.com
 marketing-mafco.de
+marketing-research.net
 marketinghouse.at
 marketoptions.com
 marketorbitlabs.it.com
@@ -11114,6 +11127,7 @@ mitsubishiautopartsshop.com
 miumiufactoryoutletuk.com
 mivilo.shop
 mivoxa.de
+mivoza.de
 mivrex.com
 mixenruhren.de
 mixerie.de
@@ -11206,6 +11220,7 @@ modeboutiquederherzen.com
 modeboutiqueweber.de
 modedeu.com
 modedisne.de
+modefest.de
 modehaus-dresden.com
 modehaus-dusseldorf.de
 modehaus-kaiser.de
@@ -12140,6 +12155,7 @@ nsrarlou.shop
 nss.gevestor.de
 nsxcapital.com
 ntb-news.shop
+ntbdiffusion.com
 ntbps-sales.com
 ntischoolpune.org
 ntonio.de
@@ -12660,6 +12676,7 @@ oshoplive.com
 osiris.com.de
 osiriscards.store
 osirisfi.com
+osirisshoes.de
 osisaflife.shop
 oskaro.shop
 osmcer.shop
@@ -12718,6 +12735,7 @@ outdoor-mall.de
 outdoor-testsieger-gartenschlauch-5gruende.de
 outdoor-testsieger-vergleich-gartenschlauch.de
 outdoor-venturesllc.com
+outdoorausruestung.com
 outdoorcampshopdepot.com
 outdoorcampzone.com
 outdoorerfahrung.com
@@ -13812,6 +13830,7 @@ rascassesas.com
 rasen-profis.de
 rasen-traktor.com
 rasen24.com
+rasengarten.com
 rasengereate.com
 rasenmahen24.com
 rasenmaherwendik.de
@@ -13859,6 +13878,7 @@ rcmotorsparts.com
 rcpartsxpress.com
 rcserpent.com
 rctoyretail.com
+rdoering.de
 re-hartmann.de
 realestate-unique.com
 realestate.immobilien
@@ -14086,6 +14106,7 @@ rexzap.com
 reynamobel.shop
 reyniae.de
 reynolds-gartenhandel.de
+rezeptfrei-24.com
 rezeptfrei-bestellung.de
 rf-kg.de
 rfshoping.com
@@ -14339,7 +14360,6 @@ rubis-patrimoine.biz
 rubis-patrimoine.fr
 rublestore.com
 rubset.com
-ruckgabe.heidi-mode.de
 rudergerat.myshopify.com
 rudolf-emilia.de
 rudolphmaschine.de
@@ -15227,6 +15247,7 @@ sleep-more.de
 sleepmoon.de
 sleepwearinc.com
 sleevefleh.com
+slidockscorporation.com
 slimcare.de
 slimmgummies.com
 slimspoonline.shop
@@ -15692,6 +15713,7 @@ stampopular.com
 stampset.com
 stampsetshop.com
 stampssale.shop
+stancery.com
 standardschuhe.com
 standesamt-portal.de
 standesamt24.com
@@ -15907,6 +15929,7 @@ streichduft.de
 strengtheng.com
 stresstherapy.de
 stretsure.com
+streurmann.de
 strickwareverkauf.com
 stridepure.de
 striegel-k-containers.de
@@ -15987,6 +16010,7 @@ suessegenuss.com
 suessigkeiten-shop.shop
 sufficientw.com
 sufira-boutique.de
+sufrema-kaufen.de
 sugex.de
 suhrer-law.de
 suieas.com
@@ -16151,6 +16175,7 @@ systemofdown.com
 sz-fishing.de
 sz-tax.com
 szigetlo.shop
+szzving.shop
 tabexofficial.com
 tablets-today.org
 tablets-world.com
@@ -17456,6 +17481,7 @@ vendis-solutions.de
 vendit24.de
 venditt24.de
 vendome-logistique.com
+vendorhub.store
 vendosnaclo.shop
 vendyle.com
 venorital.com
@@ -17583,6 +17609,7 @@ vigamtransport.com
 vignetten.gettookun.com
 vignetten.holidayfreebie.com
 vignobles-terroirs.com
+vigoroussport.com
 viking-cnc.com
 viking-outlet.at
 viking-solutions.com
@@ -17778,6 +17805,7 @@ vone-shop.com
 vonfreoy.shop
 vonillo-pepper.shop
 vonngallery.com
+voody.store
 voprch.com
 vor-texcore365.sbs
 vorano.de
@@ -18594,6 +18622,7 @@ yonexdeutschland.com
 yonexdeutschland.de
 yonexs.at
 yoocaa.com
+yoohal.com
 yooofa.com
 yootet.com
 yorkbootsshop.de
@@ -18679,6 +18708,7 @@ zaubergartenpro.com
 zauberhaftergarten.de
 zaubermerch.shop
 zaunfursicherheit.com
+zavando.de
 zctszj.com
 zebrainvest.com
 zedelmiier.com
@@ -18758,7 +18788,6 @@ zignalor.at
 zigoff.de
 zilool.com
 zimtahorn.de
-zingde.shop
 zinsanlageprofi.net
 zinsfuchs.com
 zinsmanager.de
