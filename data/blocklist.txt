@@ -1,7 +1,7 @@
 # 詐欺サイトチェッカー 同梱ブラックリスト
 # 出典: HaGeZi DNS Blocklists - Fake (https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/fake-onlydomains.txt)
 # ライセンス: GPL-3.0 (https://github.com/hagezi/dns-blocklists/blob/main/LICENSE)
-# 更新日: 2026-11-13  件数: 18848
+# 更新日: 2026-11-14  件数: 18852
 01crypto.com
 0dgwn.bemobtrcks.com
 0el-preiswert-kaufen.de
@@ -5773,7 +5773,6 @@ floveme.com
 flow-electric.de
 flow-tex.de
 flowartshop.com
-floweraup.com
 flowercomedy.com
 flowermodas.com
 flowoon.com
@@ -6495,6 +6494,8 @@ geschirronyx.com
 geschirrs-de.com
 gesichtkorperbeauty.com
 gestion-de-patrimoine-asnieres.fr
+gestion-deblock.com
+gestion.finance
 gesuender-im-leben.com
 gesunderrasen.com
 gesundeswelpenhaus.de
@@ -8195,6 +8196,7 @@ implicationi.com
 import-export.website
 importstoree.com
 improbuehne.de
+impruneta.de
 impulsa.shop
 imridiit.com
 imtrend.at
@@ -10236,6 +10238,7 @@ lukamode.de
 lukasplazapauls.shop
 lukeshoe.com
 luladiffusion.com
+luladress.com
 lululemoneu.shop
 lululemonhamburg.de
 lululemonrabatt.de
@@ -14314,6 +14317,7 @@ rotterdamsunny.com
 rotweibwein.com
 rotweinbar.com
 rotyka.com
+rougeriefinance.com
 roulettegem.com
 roullei.com
 roussebois.com
