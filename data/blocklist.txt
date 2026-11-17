@@ -1,7 +1,7 @@
 # 詐欺サイトチェッカー 同梱ブラックリスト
 # 出典: HaGeZi DNS Blocklists - Fake (https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/fake-onlydomains.txt)
 # ライセンス: GPL-3.0 (https://github.com/hagezi/dns-blocklists/blob/main/LICENSE)
-# 更新日: 2026-11-16  件数: 18783
+# 更新日: 2026-11-17  件数: 18814
 01crypto.com
 0dgwn.bemobtrcks.com
 0el-preiswert-kaufen.de
@@ -73,7 +73,6 @@
 3mjrealestatellc.com
 3racingparts.com
 3sixteenonline.org
-4-pfoten-freizeit.de
 4bike.net
 4dmarkt.de
 4kidspuint.com
@@ -597,6 +596,7 @@ alverogmbh.myshopify.com
 alvinegroup.com
 alzaccess.com
 am-onlinehandel.de
+amara-fiore.com
 amarbhosale.com
 amarego.com
 amaxuan.com
@@ -1030,6 +1030,7 @@ at.otemtau.shop
 at.pkajwb.shop
 at.qfmiceden.shop
 at.rattaay.com
+at.trabajo.org
 at.ultimate-gainz.com
 at.vbrcw.shop
 at1075.wedqc.shop
@@ -1123,6 +1124,7 @@ aurorahikari.com
 aurorastocks.com
 aurorastore.pro
 aurudium.com
+aurum.foundation
 aus-gelassen.de
 ausgabetag.com
 ausgewalhtheim.de
@@ -1666,6 +1668,7 @@ bergxperten.com
 bergxperten.de
 berichtkfz.de
 berichtprofi.de
+berindo.de
 berizen.com
 berk-designs.de
 berka-ausstattung.com
@@ -1811,6 +1814,7 @@ betashop-gmbh.com
 betonruttler.com
 betonspot.com
 betontop.com
+betrailo.com
 betrendy.site
 betrmode.com
 betrugs-check.de
@@ -2049,7 +2053,6 @@ bitcoinminetrix.com
 bitcoinmotion.com
 bitcoinmotion.io
 bitcoins-central.com
-bitconnect.co
 bitcostar.com
 bitebuns.com
 bitecbrennstoffe.de
@@ -2969,6 +2972,7 @@ chicoza.de
 chicvo.com
 chifscotton.com
 childeducationalshop.com
+childmake.com
 chillgod.com
 chilllady.com
 chimballsas.com
@@ -3005,6 +3009,7 @@ cicilookshop.com
 cicinia.de
 cielie.com
 cifuentesdresseshop.com
+cigarettescigs.com
 cimerwatch.com
 cimnelatlas.click
 cindymen.com
@@ -3539,6 +3544,7 @@ czmeds.cz
 d-ortelle.eu
 d0ood.com
 d2-si.fr
+dablement.com
 daboisdechauff.com
 dach-remscheid.de
 dachbet-casino-online.de
@@ -3772,6 +3778,7 @@ decoration-house.com
 decorationdeal.com
 decorationmaterialsonline.com
 decorazioninatalizi.com
+decordew.com
 decorevery.com
 decorhomechristmas.com
 decorlivio.com
@@ -4011,6 +4018,7 @@ deweins.com
 deweinwelthub.com
 dewello-shop.de
 dewohntraum.com
+dewskdt.shop
 dexer-handel.de
 dexoraoutlet.com
 dexxxlutz.shop
@@ -4745,6 +4753,7 @@ elektrokessmarkt.de
 elektrokueche.de
 elektromedis.com
 elektronikdesigner.de
+elektronikoutlet.com
 elektronikshopping.com
 elektronio.de
 elektronischermarkt.de
@@ -4815,6 +4824,7 @@ elveant.com
 elwenkoffer.de
 elwenrimowa.de
 elwods.store
+elwomis.de
 elysiumbikes.com
 elysiumcycles.com
 elyvanedepot.com
@@ -4937,6 +4947,7 @@ erektile-apotheke24.de
 erektilnipilulky.com
 erektilnipilulky.net
 erektionspillen.com
+ergo-brennholz.de
 erinnersegel.com
 erix9.myshopify.com
 erjteroerp.xyz
@@ -5105,6 +5116,7 @@ europillsonline.com
 eurorxdrugs.cc
 eurorxdrugs.com
 euroshopping.store
+eurotech-diamant.de
 eurshopping.com
 eushop247.com
 eusuperstores.com
@@ -7560,6 +7572,7 @@ herzmitliebe.de
 herzogberlin.de
 herzstil.de
 heshengd.com
+heudorfer-fahrradladen.de
 heute-horoskope.de
 hevia.finance
 hexa-tronic.com
@@ -7873,6 +7886,7 @@ hotelaustralien.de
 hotelladen.com
 hotels-colombo.com
 hotelsinperm.ru
+hotelsinvienna.org
 hotelsofmenorca.com
 hotelwareus.com
 hotelwhales.com
@@ -8292,6 +8306,7 @@ inteiograly.com
 intelilawllp.com
 intellectokids.com
 intelligents.store
+intellisynex.com
 intentionalk.com
 interactionm.com
 interactivecoins.com
@@ -8604,7 +8619,6 @@ jooribeauty.shop
 joox388-online.com
 joponwithlovestore.shop
 jorassicfruit.com
-jordan-1s.com
 jordan-shoes.us.com
 jordan1.uk.com
 jordanat.at
@@ -9101,6 +9115,7 @@ kinokapture.myshopify.com
 kiqutilaumpartnersnet.click
 kiranolir.com
 kirbmayer.com
+kirche-lennep.de
 kircheaustreten.de
 kircherto.shop
 kirchner-kollegen.com
@@ -10217,6 +10232,7 @@ lunara-vondilex.de
 lunarelleberlin.de
 lunarr-solar-systems.xyz
 lunaryfinance.com
+lunaseacoffees.com
 lunavelle-official.com
 lunaxadv.myshopify.com
 luner-boutique.com
@@ -11720,6 +11736,7 @@ nbdiscount.com
 nbynicole.com
 ncases.com
 nchen.de
+ndb-shop.com
 ndfinitee.com
 neary.de
 neatherlandnewstoday.com
@@ -11910,6 +11927,7 @@ ninjakitchenllc.com
 ninoplay.de
 ninthcit.de
 niomo.shop
+nirana.de
 niruox.com
 nittogeschaft.com
 nituralelements.com
@@ -12920,6 +12938,8 @@ pellets-maschinen.de
 pellets-skog.com
 pelletsgeschaft.com
 pelletshoponline.com
+pelletsrl.com
+pelletwerk.com
 pelopel.com
 peluxiv.at
 peluxiv.com
@@ -13055,6 +13075,7 @@ pharmacieenlignefrance.com
 pharmacy-europe.com
 pharmacy-true.com
 pharmacy-xl.org
+pharmacyeurope24.com
 pharmacyinventory.org
 pharmacymarketonline.com
 pharmacyonline24.com
@@ -13814,7 +13835,6 @@ rctoyretail.com
 rdoering.de
 re-hartmann.de
 realestate-unique.com
-realestate.immobilien
 realitymaelstrom.shop
 realitystore.shop
 reallpharmacy.com
@@ -14476,6 +14496,7 @@ sandsberg.de
 sanfte-huegel.de
 sangaa.co
 sanitaer-meier.de
+sanitaerfreude.com
 sanitaetshausshop.com
 sanitatsbedarf24.com
 sante360plus.com
@@ -14540,6 +14561,7 @@ sbikeparts.com
 sbk-hoffmeyer.de
 sbnaf.shop
 sboxcontainers.com
+scandiwarm.com
 scannero.io
 scarpa-de.myshopify.com
 scarpaosterreich.at
@@ -14968,6 +14990,7 @@ shophealthysmile.com
 shophedn.com
 shophoneybadger.com
 shopify-pay.de
+shopjamei.com
 shopjbweld.com
 shopjopandi.shop
 shopkamagra.org
@@ -15467,6 +15490,7 @@ spanenewstoday.com
 spar-allianz.de
 spar-markt.de
 sparfuchs-vergleich.base44.app
+sparfuchs.shop
 sparhaustechnik.de
 sparkamerad.de
 sparkauf.eu
@@ -15614,7 +15638,6 @@ spuelenprofide.com
 spuelerparts.com
 spybulbcamera.de
 spydersale.de
-spydiscount24.com
 spyshop.at
 spyxe.com
 squarexchange.com
@@ -16272,8 +16295,10 @@ temala.de
 temp-dxvrqxhirzbigzysagqp.webadorsite.com
 temptlife.com
 tempusluxor.com.br
+temude.com
 ten-estate.com
 tenddaily.com
+teneva.de
 tengoa.com
 tennis-babolat.com
 tennisbedarf.com
@@ -16551,6 +16576,7 @@ timbuktours.de
 timesofnetherland.com
 timesofspanish.com
 timmanteau.xyz
+timsneakers.com
 timtamperformo.shop
 tinagarten.de
 tinarasen.com
@@ -16664,6 +16690,7 @@ toniesverkauf-de.com
 tonmann.net
 tooeut.com
 toolandmaintenance.com
+toolbaypro.com
 toolblitzz.myshopify.com
 toolbrathirs.shop
 toolclearancesale.com
@@ -17754,6 +17781,7 @@ vorratshaus.com
 vorratswerk.shop
 vorsorge-karte.com
 vortexashop.net
+vorwerk-com.de
 vorwerk-de.com
 vorwerk-deutschland.de
 vorwerk-shopline.com
@@ -17934,6 +17962,7 @@ waxabordableroyaume.com
 waxify.de
 way-re.com
 wayofwade.at
+wbdhyer.shop
 wbecrisfro.com
 wbymall.store
 wd-agentur.de
@@ -18440,6 +18469,7 @@ xeodis.com
 xeond.com
 xera.pro
 xerofootwearuk.com
+xeroshoesnz.com
 xevago.com
 xflyrc.com
 xfr-financial.com
@@ -18545,6 +18575,7 @@ yonex-deutschland.com
 yonexdeutschland.com
 yonexdeutschland.de
 yonexs.at
+yonook.com
 yoocaa.com
 yoohal.com
 yooofa.com
