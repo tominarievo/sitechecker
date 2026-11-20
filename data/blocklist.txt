@@ -1,7 +1,7 @@
 # 詐欺サイトチェッカー 同梱ブラックリスト
 # 出典: HaGeZi DNS Blocklists - Fake (https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/fake-onlydomains.txt)
 # ライセンス: GPL-3.0 (https://github.com/hagezi/dns-blocklists/blob/main/LICENSE)
-# 更新日: 2026-11-19  件数: 10727
+# 更新日: 2026-11-20  件数: 10728
 01crypto.com
 0dgwn.bemobtrcks.com
 0el-preiswert-kaufen.de
@@ -1430,6 +1430,7 @@ braintester.net
 bralettesstore.com
 brand-fahrradladen.de
 brandclothesshop.site
+branden-burg.com
 brandschutzfachbuero-engler.de
 brandsoutlet.at
 brandup-grade.de
