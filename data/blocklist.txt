@@ -1,7 +1,7 @@
 # 詐欺サイトチェッカー 同梱ブラックリスト
 # 出典: HaGeZi DNS Blocklists - Fake (https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/fake-onlydomains.txt)
 # ライセンス: GPL-3.0 (https://github.com/hagezi/dns-blocklists/blob/main/LICENSE)
-# 更新日: 2026-11-20  件数: 10728
+# 更新日: 2026-11-21  件数: 10734
 01crypto.com
 0dgwn.bemobtrcks.com
 0el-preiswert-kaufen.de
@@ -1454,7 +1454,6 @@ brennholz-anhaenger.de
 brennholz-brennstoff.com
 brennholz-forstservice-gilbert.de
 brennholz-friedrich.com
-brennholz-goignerog.at
 brennholz-hans.de
 brennholz-haus.de
 brennholz-hofmann.de
@@ -1914,7 +1913,6 @@ comfie.de
 comfitunderwear-suomi.com
 comicpickshop.com
 comme-des-garcons.at
-comme-des-garcons.co.at
 commedesgarconsstore.de
 commercewealth.com
 completegameproshop.com
@@ -2965,7 +2963,6 @@ etropo.com
 etsbois-de-chaufage.com
 etsyshield.com
 ettern24.de
-etvgozkl.shop
 eu-meds.net
 eu-pharmacy-online.com
 eu-pillstore.com
@@ -3302,6 +3299,7 @@ finprofm.com
 finrally.com
 finrocketpro.com
 fintessxpert.com
+fintevex.io
 fintrexia.org
 finvestai.org
 finvoire.com
@@ -3540,7 +3538,6 @@ gaballo-handel.de
 gabbian.de
 gabelglanz.de
 gaborberlin.com
-gaborosterreich.at
 gaborshoesoutlet.shop
 gahas24.de
 gaiabeautyproducts.com
@@ -3581,6 +3578,7 @@ gaminglaptopcomputer.com
 gamingmadarin.org
 gamingmarkt.de
 gamingonline.store
+gannioutlet.de
 gantosterreich.co.at
 gap-outlet.de
 gapde.de
@@ -4240,6 +4238,7 @@ haushaltsgeratemarkt.com
 haushaltsheld.com
 haushaltsreich.de
 haushaltswarendiscount.shop
+hausmarkt24.com
 hausmobel-de.com
 hausofvedashop.com
 hausonline24.com
@@ -4360,6 +4359,7 @@ heizoel-lieferung.com
 heizoel-tankstelle.de
 heizoel24-aktuell.com
 heizoel24-preise.com
+heizoel24.shop
 heizoelbp.de
 heizoeldeal.de
 heizoelhanse.com
@@ -5453,6 +5453,7 @@ konsolenexperten.de
 konsolenladen.com
 konsolenland.de
 konsolenmarkt.com
+konsolenplatz.com
 kontaktlinsenshopping.de
 kontano.de
 kopfsacheonline.de
@@ -5734,6 +5735,7 @@ lems.com.de
 lenaskunst.de
 lennys-autoteile.at
 leobabyjordanbjj.com
+leomans.com
 leopold-mode.com
 leoswc.com
 leqaa-store.com
@@ -5908,6 +5910,7 @@ lottokuwait.org
 lottonorway.net
 lottoportugal.net
 lottoslovakia.sk
+lottosouthafrica.net
 lotusgaminglive.com
 lotz-container.com
 louise-perrin.de
@@ -6710,6 +6713,7 @@ muskangaming.com
 muskanonline.com
 mustang-parts-shop.de
 mutterkissen.myshopify.com
+muvastore.com
 muzam.de
 mvleingarten.de
 mxdara.com
@@ -7124,6 +7128,7 @@ omenyxgroup.com
 omnedealslab.online
 omniluxaustria.com
 on-at.com
+on-outlet.shop
 on-runningdeutschland.de
 on2025004.myshoplaza.com
 on3.myshoplaza.com
@@ -7393,6 +7398,7 @@ panelaeki.de
 pankratiusgarten.de
 panonlineshop.com
 panura.de
+papabau.com
 papageienzuchtheim.de
 papasmagazine.com.br
 parabound.de
@@ -8307,7 +8313,6 @@ salmingslovenija.com
 salmingsuomi.com
 salomon-deutschland.de
 salomondeutschlandsale.de
-salomonosterreich.at
 salomonoutletgermany.de
 salomonoutletireland.com
 salomonoutletstoresusa.com
@@ -9745,6 +9750,7 @@ triton-online.com
 tritoncapitalmarkets.com
 tritonmarkets.com
 trivanode.com
+trivio-handel.de
 trivona.de
 trockenes-brennholz.com
 trockenesholz.de
