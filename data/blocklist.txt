@@ -1,7 +1,7 @@
 # 詐欺サイトチェッカー 同梱ブラックリスト
 # 出典: HaGeZi DNS Blocklists - Fake (https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/fake-onlydomains.txt)
 # ライセンス: GPL-3.0 (https://github.com/hagezi/dns-blocklists/blob/main/LICENSE)
-# 更新日: 2026-11-24  件数: 10326
+# 更新日: 2026-11-25  件数: 10331
 01crypto.com
 0dgwn.bemobtrcks.com
 0el-preiswert-kaufen.de
@@ -253,6 +253,7 @@ alfrescodurable.com
 algexia.pro
 algo-robot.co
 algorates.com
+algosone.ai
 aliceblue-alligator-117543.hostingersite.com
 alijz.com
 alimora.shop
@@ -773,7 +774,6 @@ babygea.com
 babygluckde.com
 babyglueck.shop
 babylissde.de
-babymodepur.com
 babynippon.com
 babyroom-shop.com
 babyschlafsack-abc.de
@@ -1235,6 +1235,7 @@ bitaiapp.pro
 bitcoin-pharmacy.com
 bitcoin-xact.fr
 bitcoineer.ai
+bitcoinera.app
 bitcoinera.com
 bitcoins-central.com
 bitebuns.com
@@ -1323,6 +1324,7 @@ boiscolomb.fr
 boisdechauffage.de
 bokermessershop.com
 boldsports.de
+bomiafx.com
 bonficegermany.myshopify.com
 bongochat.de
 bongochat.me
@@ -1401,6 +1403,7 @@ brennholz-brennstoff.com
 brennholz-forstservice-gilbert.de
 brennholz-friedrich.com
 brennholz-hans.de
+brennholz-haus.com
 brennholz-hofmann.de
 brennholz-konig.de
 brennholz-land.com
@@ -2925,7 +2928,6 @@ evolgrafix.de
 evoqueebikeshop.shop
 evoragaming.com
 ewigerbund.org
-ewigesleder.com
 ewzmvasz.shop
 exakubusinessclub.com
 excelia.net
@@ -3776,6 +3778,7 @@ goball.de
 goelitemarketing.com
 gogumus.com
 gohuntsport.myshoplaza.com
+goia-direkt.de
 goillo.com
 gokoelectricinc.com
 golaschuhewebsite.de
@@ -3840,6 +3843,7 @@ gotrax.store
 gotrixa.de
 govern1.com
 gpautoshopimport.com
+gplate.de
 gpslocatorphone.com
 gqaltq.shop
 grabpillsusa.com
@@ -3865,6 +3869,7 @@ grazapotheke.com
 green-shop.com.ua
 greenbird-shop.com
 greencrosspharmacy.online
+greendax.com
 greeneggstore.de
 greenhousesshop.com
 greentec-handel.de
@@ -4072,7 +4077,6 @@ haushaltgeschirr.com
 haushaltland.de
 haushaltmarkt.de
 haushaltofficial.com
-haushalts.store
 haushaltsgeraete-profis.de
 haushaltsgeratemarkt.com
 haushaltsheld.com
@@ -5084,7 +5088,6 @@ kayibaby.com
 kazoomba.com
 kbetake.com
 kbs-management.cc
-kedejo.com
 kedros-zeklant.de
 kedssuomi.com
 keen--shoes.com
@@ -5887,6 +5890,7 @@ marketsview.io
 marketxarproducts.shop
 markierskibindungen.com
 markt-shop.com
+markt.agency
 markt.life
 marktexpress.com
 marktkarree-langenfeld.de
@@ -6614,6 +6618,7 @@ nexxco24.de
 nflfanaticsstore.com
 nger.de
 nguebelipharma.com
+nhcol.com
 nholz.com
 nicechmk.shop
 nicedoc.co
@@ -9042,6 +9047,7 @@ thailives.com
 thaisawadee.de
 thanesar.com
 the-bitcoin-bank.com
+the-ethereumcode-pro.com
 the-garden-pavilions-of-sobranie-russian.eshop.t-online.de
 the-immediateconnect.com
 the-portable-monitor.tech
@@ -9686,7 +9692,6 @@ vielfaltdepot.com
 viennaaustrohotel.com
 vientooffice.de
 vigamtransport.com
-vignetten.gettookun.com
 vignobles-terroirs.com
 viking-cnc.com
 viking-outlet.at
