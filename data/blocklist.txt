@@ -1,7 +1,7 @@
 # 詐欺サイトチェッカー 同梱ブラックリスト
 # 出典: HaGeZi DNS Blocklists - Fake (https://raw.githubusercontent.com/hagezi/dns-blocklists/main/wildcard/fake-onlydomains.txt)
 # ライセンス: GPL-3.0 (https://github.com/hagezi/dns-blocklists/blob/main/LICENSE)
-# 更新日: 2026-11-27  件数: 10717
+# 更新日: 2026-11-28  件数: 10709
 01crypto.com
 0dgwn.bemobtrcks.com
 0el-preiswert-kaufen.de
@@ -563,7 +563,6 @@ arila.de
 arin-solar.ch
 arkalogistic.top
 arkamgym.com
-arkenberlin.de
 arketrabatt.de
 arlequininvest.io
 armodafinil.cz
@@ -840,7 +839,6 @@ bancmarkets.com
 bandar.shop
 bank-crypto.com
 bank-of-crypto.com
-bank-partners.com
 bankandcapital.com
 banking.wsboh.org
 bankofbinary.com
@@ -1436,7 +1434,6 @@ brennholz-haus.com
 brennholz-haus.de
 brennholz-hofmann.de
 brennholz-konig.de
-brennholz-land.com
 brennholz-pellets.com
 brennholz-quelle.de
 brennholz-wieslohn.de
@@ -1855,7 +1852,6 @@ cluud7.com
 cmchbhopal.com
 cmdt-sales.com
 cmglifaf.shop
-cmsmanutention.com
 cnfrm-newsale8324.click
 cnfrmnewsale924.click
 cnnworldtoday.com
@@ -3391,7 +3387,6 @@ fr.puprime.net
 fr.samtradefx.com
 fr.xpoken.com
 fragonard.co.at
-framezegame.com
 france-finances.com
 francemusicstore.com
 frankefahrrad.de
@@ -3814,7 +3809,6 @@ gigasport8.myshoplaza.com
 giikfire.com
 giondo.de
 giovannigruppe.de
-giro-finance.com
 gisaauszugonline.at
 gisemo.com
 gisler-treuhand.de
@@ -4008,6 +4002,7 @@ group-investment.com
 group-rwe.de
 groupebinary.com
 grow-dutch.com
+growano.com
 growthline.ltd
 grs-capital.com
 gruenstark.de
@@ -6026,7 +6021,6 @@ marciadivasboutique.shop
 marcjacobsosterreich.at
 mardano.com
 marginelite.com
-margissance.fr
 marie-herbstkg.de
 mariela-beauty-studio.com
 mariemero-salestore.shop
@@ -6096,6 +6090,7 @@ materialbearbeitung.com
 materialde.myshopify.com
 maternitybabyworld.com
 matinvestgroup.com
+matratzeca.com
 mattelverkauf.de
 maturepornbeauty.shop
 mauersberger-rechtsanwalt.de
@@ -6814,7 +6809,6 @@ nger.de
 nguebelipharma.com
 nhcol.com
 nholz.com
-nicechmk.shop
 nicedoc.co
 nicetossyhn.click
 nicikuscheltiere.com
@@ -7828,7 +7822,6 @@ radzubehoer24.com
 radzubehoerde.com
 raetzmodellbau.de
 rafso.tovy.shop
-ragwear.com.de
 ragwearaustria.com
 rainer-baumarkt.de
 rainer-wunderlich.shop
@@ -8206,7 +8199,6 @@ sale-meds.com
 sale-onlines.shop
 sale-perfume.com
 sale-scape.de
-sale.zooplusweb.com
 saleelectrical.com
 saleemrizwan.com
 salegermaniatools.com
@@ -8389,7 +8381,6 @@ seasonsbeauty.de
 sebastian-stenzel.de
 secure-canadian-pharmacy.net
 secure.shopvio.co
-secureinvest.org
 securemed.shop
 secureviewrollershutters.com
 securitybekleidung.de
@@ -10276,7 +10267,6 @@ werk-garten.de
 werk-werkzeuge.com
 werkbau24.com
 werke-anhangers.com
-werkelio.de
 werkerswelt-moelln.de
 werksraeder-24.de
 werkstatt-teile.com
@@ -10468,6 +10458,7 @@ www.investissement.strategie-business.com
 www.lyxorassetmanagement.com
 www.lyxorpro.com
 www.quantum.groupe.com
+www.secureinvest.org
 www.swissepargne.com
 www.uniqa-alternatives.com
 www.universaltrade.io
@@ -10566,6 +10557,7 @@ yeti.com.de
 yguxodod.shop
 yinga-vital.de
 yinzmkt-sales.com
+yiqixiuba.com
 yiyang-solar.com
 yjcwmxhh.shop
 ykuutlgc.shop
